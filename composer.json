@@ -1,0 +1,12 @@
+{
+	"name": "consistence/consistence-jms-serializer",
+	"description": "Integration of Consistence library with JMS Serializer",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Vašek Purchart",
+			"email": "me@vasekpurchart.cz",
+			"homepage": "http://vasekpurchart.cz"
+		}
+	]
+}
