@@ -88,6 +88,35 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		], $user->arrayOfSingleEnums, true);
 	}
 
+	public function testSerializeArrayOfEnumsAsSingleEnumsArray()
+	{
+		$user = new User();
+		$user->multiEnumAsSingleEnumsArray = RolesEnum::getMultiByEnums([
+			RoleEnum::get(RoleEnum::ADMIN),
+			RoleEnum::get(RoleEnum::EMPLOYEE),
+		]);
+
+		$serializer = $this->getSerializer();
+		$json = $serializer->serialize($user, 'json');
+		$this->assertContains(sprintf('"multi_enum_as_single_enums_array":["%s","%s"]', RoleEnum::EMPLOYEE, RoleEnum::ADMIN), $json);
+	}
+
+	public function testDeserializeMultiEnumAsSingleEnumsArray()
+	{
+		$serializer = $this->getSerializer();
+		$user = $serializer->deserialize(sprintf('{
+			"multi_enum_as_single_enums_array": [
+				"%s",
+				"%s"
+			]
+		}', RoleEnum::ADMIN, RoleEnum::EMPLOYEE), User::class, 'json');
+		$this->assertInstanceOf(User::class, $user);
+		$this->assertSame(RolesEnum::getMultiByEnums([
+			RoleEnum::get(RoleEnum::ADMIN),
+			RoleEnum::get(RoleEnum::EMPLOYEE),
+		]), $user->multiEnumAsSingleEnumsArray);
+	}
+
 	public function testSerializeEnumWithoutName()
 	{
 		$user = new User();
@@ -192,6 +221,82 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			$this->assertEquals('embeded_object.single_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
+			$this->assertSame('foo', $previous->getValue());
+		}
+	}
+
+	public function testSerializeEnumAsSingleEnumsArrayNotMappedSingleEnum()
+	{
+		$user = new User();
+		$user->multiNoSingleEnumMapped = FooEnum::getMulti(FooEnum::FOO);
+		$serializer = $this->getSerializer();
+
+		try {
+			$serializer->serialize($user, 'json');
+			$this->fail();
+		} catch (\Consistence\Enum\NoSingleEnumSpecifiedException $e) {
+			$this->assertSame(FooEnum::class, $e->getClass());
+		}
+	}
+
+	public function testDeserializeEnumAsSingleEnumsArrayNotMappedSingleEnum()
+	{
+		$serializer = $this->getSerializer();
+
+		try {
+			$serializer->deserialize(sprintf('{
+				"multi_no_single_enum_mapped": %d
+			}', FooEnum::FOO), User::class, 'json');
+			$this->fail();
+		} catch (\Consistence\Enum\NoSingleEnumSpecifiedException $e) {
+			$this->assertSame(FooEnum::class, $e->getClass());
+		}
+	}
+
+	public function testSerializeEnumAsSingleEnumsArrayNotMultiEnum()
+	{
+		$user = new User();
+		$user->singleMappedAsMulti = RoleEnum::get(RoleEnum::ADMIN);
+		$serializer = $this->getSerializer();
+
+		try {
+			$serializer->serialize($user, 'json');
+			$this->fail();
+		} catch (\Consistence\JmsSerializer\Enum\NotMultiEnumException $e) {
+			$this->assertSame(RoleEnum::class, $e->getClassName());
+		}
+	}
+
+	public function testDeserializeEnumAsSingleEnumsArrayNotMultiEnum()
+	{
+		$serializer = $this->getSerializer();
+
+		try {
+			$serializer->deserialize(sprintf('{
+				"single_mapped_as_multi": [
+					"%s",
+					"%s"
+				]
+			}', RoleEnum::ADMIN, RoleEnum::EMPLOYEE), User::class, 'json');
+			$this->fail();
+		} catch (\Consistence\JmsSerializer\Enum\NotMultiEnumException $e) {
+			$this->assertSame(RoleEnum::class, $e->getClassName());
+		}
+	}
+
+	public function testDeserializeEnumAsSingleEnumsArrayNoArrayGiven()
+	{
+		$serializer = $this->getSerializer();
+
+		try {
+			$serializer->deserialize('{
+				"multi_enum_as_single_enums_array": "foo"
+			}', User::class, 'json');
+			$this->fail();
+		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
+			$this->assertSame('multi_enum_as_single_enums_array', $e->getFieldPath());
+			$previous = $e->getPrevious();
+			$this->assertInstanceOf(\Consistence\JmsSerializer\Enum\NotIterableValueException::class, $previous);
 			$this->assertSame('foo', $previous->getValue());
 		}
 	}

@@ -3,6 +3,8 @@
 namespace Consistence\JmsSerializer\Enum;
 
 use Consistence\Enum\Enum;
+use Consistence\Enum\MultiEnum;
+use Consistence\Type\ArrayType\ArrayType;
 
 use JMS\Serializer\AbstractVisitor;
 use JMS\Serializer\Context;
@@ -10,8 +12,12 @@ use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\VisitorInterface;
 
+use Traversable;
+
 class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandlerInterface
 {
+
+	const PARAM_MULTI_AS_SINGLE = 'as_single';
 
 	const PATH_PROPERTY_SEPARATOR = '::';
 	const PATH_FIELD_SEPARATOR = '.';
@@ -72,6 +78,12 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 			if ($mappedEnumClass !== $actualEnumClass) {
 				throw new \Consistence\JmsSerializer\Enum\MappedClassMismatchException($mappedEnumClass, $actualEnumClass);
 			}
+			if ($this->hasAsSingleParameter($type)) {
+				$this->checkMultiEnum($actualEnumClass);
+				return array_values(ArrayType::mapValuesByCallback($enum->getEnums(), function (Enum $singleEnum) {
+					return $singleEnum->getValue();
+				}));
+			}
 		}
 
 		return $enum->getValue();
@@ -90,6 +102,8 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 			return $this->deserializeEnumValue($data, $type);
 		} catch (\Consistence\Enum\InvalidEnumValueException $e) {
 			throw new \Consistence\JmsSerializer\Enum\DeserializationInvalidValueException($this->getFieldPath($visitor, $context), $e);
+		} catch (\Consistence\JmsSerializer\Enum\NotIterableValueException $e) {
+			throw new \Consistence\JmsSerializer\Enum\DeserializationInvalidValueException($this->getFieldPath($visitor, $context), $e);
 		}
 	}
 
@@ -101,6 +115,23 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	private function deserializeEnumValue($data, array $type)
 	{
 		$enumClass = $this->getEnumClass($type);
+		if ($this->hasAsSingleParameter($type)) {
+			$this->checkMultiEnum($enumClass);
+			$singleEnumClass = $enumClass::getSingleEnumClass();
+			if ($singleEnumClass === null) {
+				throw new \Consistence\Enum\NoSingleEnumSpecifiedException($enumClass);
+			}
+			$singleEnums = [];
+			if (!is_array($data) && !($data instanceof Traversable)) {
+				throw new \Consistence\JmsSerializer\Enum\NotIterableValueException($data);
+			}
+			foreach ($data as $item) {
+				$singleEnums[] = $singleEnumClass::get($item);
+			}
+
+			return $enumClass::getMultiByEnums($singleEnums);
+		}
+
 		return $enumClass::get($data);
 	}
 
@@ -129,6 +160,27 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	{
 		return isset($type['params'][0])
 			&& isset($type['params'][0]['name']);
+	}
+
+	/**
+	 * @param mixed[] $type
+	 * @return boolean
+	 */
+	private function hasAsSingleParameter(array $type)
+	{
+		return isset($type['params'][1])
+			&& isset($type['params'][1]['name'])
+			&& $type['params'][1]['name'] === self::PARAM_MULTI_AS_SINGLE;
+	}
+
+	/**
+	 * @param string $enumClass
+	 */
+	private function checkMultiEnum($enumClass)
+	{
+		if (!is_a($enumClass, MultiEnum::class, true)) {
+			throw new \Consistence\JmsSerializer\Enum\NotMultiEnumException($enumClass);
+		}
 	}
 
 	/**
