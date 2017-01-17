@@ -277,6 +277,8 @@ class Consistence\JmsSerializer\Example\User\User#48 (1) {
 Installation
 ------------
 
+> If you are using Symfony, you can use [`consistence/consistence-jms-serializer-symfony`](https://github.com/consistence/consistence-jms-serializer-symfony), which will take care of the integration.
+
 1) Install package [`consistence/consistence-jms-serializer`](https://packagist.org/packages/consistence/consistence-jms-serializer) with [Composer](https://getcomposer.org/):
 
 ```bash
