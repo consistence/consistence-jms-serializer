@@ -2,6 +2,8 @@
 
 namespace Consistence\JmsSerializer\Enum;
 
+use Closure;
+
 use Consistence\Enum\Enum;
 use Consistence\Enum\MultiEnum;
 use Consistence\Type\ArrayType\ArrayType;
@@ -168,9 +170,19 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 */
 	private function hasAsSingleParameter(array $type)
 	{
-		return isset($type['params'][1])
-			&& isset($type['params'][1]['name'])
-			&& $type['params'][1]['name'] === self::PARAM_MULTI_AS_SINGLE;
+		return $this->findParameter($type, function (array $parameter) {
+			return $parameter['name'] === self::PARAM_MULTI_AS_SINGLE;
+		}) !== null;
+	}
+
+	/**
+	 * @param mixed[] $type
+	 * @param \Closure $callback
+	 * @return mixed[]|null
+	 */
+	private function findParameter(array $type, Closure $callback)
+	{
+		return ArrayType::findValueByCallback($type['params'], $callback);
 	}
 
 	/**
