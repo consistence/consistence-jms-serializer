@@ -134,6 +134,33 @@ var_dump($serializer->deserialize('{
 
 If you are using this in an API, make sure you will catch this exception and send the consumer a response detailing this error, you can also write a custom message, the available values are listed in `InvalidEnumValueException::getAvailableValues()`.
 
+### XML support
+
+Unlike in JSON, in XML value types cannot be inferred directly from the values. So if you need to deserialize XML, you have to provide this type manually. You can do this by writing the type in the type definition - for the above example it would be `string`:
+
+```php
+<?php
+
+namespace Consistence\JmsSerializer\Example\User;
+
+use JMS\Serializer\Annotation as JMS;
+
+class User extends \Consistence\ObjectPrototype
+{
+
+	// ...
+
+	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Example\User\Sex, string>")
+	 * @var \Consistence\JmsSerializer\Example\User\Sex|null
+	 */
+	private $sex;
+
+	// ...
+
+}
+```
+
 ### Special support for mapped MultiEnums
 
 Since the (de)serialization works only with the value the enum is representing, then in case of [MultiEnums](https://github.com/consistence/consistence/blob/master/docs/Enum/multi-enums.md) this would mean outputting the value of the internal bit mask. This could be useful if both the client and server use the same Enum objects, but otherwise this breaks the abstraction and is less readable for a human consumer as well.

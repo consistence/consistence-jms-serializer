@@ -14,6 +14,12 @@ class User
 	public $singleEnum;
 
 	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\RoleEnum, string>")
+	 * @var \Consistence\JmsSerializer\Enum\RoleEnum
+	 */
+	public $singleEnumWithType;
+
+	/**
 	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\TypeEnum>")
 	 * @var \Consistence\JmsSerializer\Enum\TypeEnum
 	 */
@@ -36,6 +42,12 @@ class User
 	 * @var \Consistence\JmsSerializer\Enum\RolesEnum
 	 */
 	public $multiEnumAsSingleEnumsArray;
+
+	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\RolesEnum, as_single, string>")
+	 * @var \Consistence\JmsSerializer\Enum\RolesEnum
+	 */
+	public $multiEnumAsSingleEnumsArrayWithType;
 
 	/**
 	 * @JMS\Type("enum")
@@ -66,5 +78,11 @@ class User
 	 * @var \Consistence\JmsSerializer\Enum\RoleEnum
 	 */
 	public $singleMappedAsMulti;
+
+	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\TypeEnum, string>")
+	 * @var \Consistence\JmsSerializer\Enum\TypeEnum
+	 */
+	public $typeEnumWithType;
 
 }
