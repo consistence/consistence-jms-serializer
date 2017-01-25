@@ -14,6 +14,12 @@ class User
 	public $singleEnum;
 
 	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\TypeEnum>")
+	 * @var \Consistence\JmsSerializer\Enum\TypeEnum
+	 */
+	public $typeEnum;
+
+	/**
 	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\RolesEnum>")
 	 * @var \Consistence\JmsSerializer\Enum\RolesEnum
 	 */

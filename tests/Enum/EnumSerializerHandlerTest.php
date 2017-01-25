@@ -20,6 +20,32 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('"single_enum":"%s"', RoleEnum::ADMIN), $json);
 	}
 
+	public function jsonTypesProvider()
+	{
+		return [
+			[TypeEnum::INTEGER, '1'],
+			[TypeEnum::STRING, '"foo"'],
+			[TypeEnum::FLOAT, '2.5'],
+			[TypeEnum::BOOLEAN, 'true'],
+		];
+	}
+
+	/**
+	 * @dataProvider jsonTypesProvider
+	 *
+	 * @param mixed $value
+	 * @param string $serializedValue
+	 */
+	public function testSerializeJsonTypes($value, $serializedValue)
+	{
+		$user = new User();
+		$user->typeEnum = TypeEnum::get($value);
+
+		$serializer = $this->getSerializer();
+		$json = $serializer->serialize($user, 'json');
+		$this->assertContains(sprintf('"type_enum":%s', $serializedValue), $json);
+	}
+
 	public function testDeserializeEnum()
 	{
 		$serializer = $this->getSerializer();
@@ -28,6 +54,22 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}', RoleEnum::ADMIN), User::class, 'json');
 		$this->assertInstanceOf(User::class, $user);
 		$this->assertSame(RoleEnum::get(RoleEnum::ADMIN), $user->singleEnum);
+	}
+
+	/**
+	 * @dataProvider jsonTypesProvider
+	 *
+	 * @param mixed $value
+	 * @param string $serializedValue
+	 */
+	public function testDeserializeJsonTypes($value, $serializedValue)
+	{
+		$serializer = $this->getSerializer();
+		$user = $serializer->deserialize(sprintf('{
+			"type_enum": %s
+		}', $serializedValue), User::class, 'json');
+		$this->assertInstanceOf(User::class, $user);
+		$this->assertSame(TypeEnum::get($value), $user->typeEnum);
 	}
 
 	public function testSerializeMultiEnum()
