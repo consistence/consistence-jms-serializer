@@ -128,7 +128,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$user = new User();
 		$roles = RolesEnum::getMultiByEnums([
 			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE)
+			RoleEnum::get(RoleEnum::EMPLOYEE),
 		]);
 		$user->multiEnum = $roles;
 
@@ -141,7 +141,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	{
 		$roles = RolesEnum::getMultiByEnums([
 			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE)
+			RoleEnum::get(RoleEnum::EMPLOYEE),
 		]);
 		$serializer = $this->getSerializer();
 		$user = $serializer->deserialize(sprintf('{
