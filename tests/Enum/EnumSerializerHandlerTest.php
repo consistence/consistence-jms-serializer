@@ -7,7 +7,6 @@ namespace Consistence\JmsSerializer\Enum;
 use JMS\Serializer\Handler\HandlerRegistry;
 use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerBuilder;
-
 use SimpleXMLElement;
 use stdClass;
 

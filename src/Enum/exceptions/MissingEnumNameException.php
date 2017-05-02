@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Consistence\JmsSerializer\Enum;
 
-class MissingEnumNameException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
+class MissingEnumNameException extends \Consistence\PhpException
 {
 
 	public function __construct(\Throwable $previous = null)

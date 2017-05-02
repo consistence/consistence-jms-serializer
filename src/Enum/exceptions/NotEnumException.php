@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Consistence\JmsSerializer\Enum;
 
-class NotEnumException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
+class NotEnumException extends \Consistence\PhpException
 {
 
 	/** @var string */

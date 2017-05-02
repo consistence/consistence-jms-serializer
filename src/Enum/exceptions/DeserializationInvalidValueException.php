@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Consistence\JmsSerializer\Enum;
 
-class DeserializationInvalidValueException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
+class DeserializationInvalidValueException extends \Consistence\PhpException
 {
 
 	/** @var string */

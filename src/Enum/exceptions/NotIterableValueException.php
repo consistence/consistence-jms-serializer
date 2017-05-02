@@ -6,7 +6,7 @@ namespace Consistence\JmsSerializer\Enum;
 
 use Consistence\Type\Type;
 
-class NotIterableValueException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
+class NotIterableValueException extends \Consistence\PhpException
 {
 
 	/** @var mixed */

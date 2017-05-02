@@ -9,7 +9,7 @@ use Consistence\Type\ArrayType\ArrayType;
 class RolesEnum extends \Consistence\Enum\MultiEnum
 {
 
-	/** @var integer[] format: single Enum value (string) => MultiEnum value (integer) */
+	/** @var int[] format: single Enum value (string) => MultiEnum value (int) */
 	private static $singleMultiMap = [
 		RoleEnum::ADMIN => 1,
 		RoleEnum::EMPLOYEE => 2,
@@ -25,7 +25,7 @@ class RolesEnum extends \Consistence\Enum\MultiEnum
 	 * Converts value representing a value from single Enum to MultiEnum counterpart
 	 *
 	 * @param string $singleEnumValue
-	 * @return integer
+	 * @return int
 	 */
 	protected static function convertSingleEnumValueToValue($singleEnumValue): int
 	{
@@ -35,7 +35,7 @@ class RolesEnum extends \Consistence\Enum\MultiEnum
 	/**
 	 * Converts value representing a value from MultiEnum to single Enum counterpart
 	 *
-	 * @param integer $value
+	 * @param int $value
 	 * @return string
 	 */
 	protected static function convertValueToSingleEnumValue(int $value): string

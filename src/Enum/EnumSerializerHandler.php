@@ -5,18 +5,15 @@ declare(strict_types = 1);
 namespace Consistence\JmsSerializer\Enum;
 
 use Closure;
-
 use Consistence\Enum\Enum;
 use Consistence\Enum\MultiEnum;
 use Consistence\Type\ArrayType\ArrayType;
 use Consistence\Type\Type;
-
 use JMS\Serializer\AbstractVisitor;
 use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigator;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\VisitorInterface;
-
 use Traversable;
 
 class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandlerInterface
@@ -234,7 +231,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 
 	/**
 	 * @param mixed[] $type
-	 * @return boolean
+	 * @return bool
 	 */
 	private function hasEnumClassParameter(array $type): bool
 	{
@@ -244,7 +241,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 
 	/**
 	 * @param mixed[] $type
-	 * @return boolean
+	 * @return bool
 	 */
 	private function hasAsSingleParameter(array $type): bool
 	{

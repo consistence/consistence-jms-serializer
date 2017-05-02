@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Consistence\JmsSerializer\Enum;
 
-class MappedClassMismatchException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
+class MappedClassMismatchException extends \Consistence\PhpException
 {
 
 	/** @var string */
