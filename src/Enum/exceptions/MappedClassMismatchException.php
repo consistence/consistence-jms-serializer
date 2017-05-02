@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Consistence\JmsSerializer\Enum;
 
 class MappedClassMismatchException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
@@ -11,12 +13,7 @@ class MappedClassMismatchException extends \Consistence\PhpException implements 
 	/** @var string */
 	private $valueClassName;
 
-	/**
-	 * @param string $mappedClassName
-	 * @param string $valueClassName
-	 * @param \Exception|null $previous
-	 */
-	public function __construct($mappedClassName, $valueClassName, \Exception $previous = null)
+	public function __construct(string $mappedClassName, string $valueClassName, \Throwable $previous = null)
 	{
 		parent::__construct(sprintf(
 			'Class of given value "%s" does not match mapped %s<%s>',
@@ -28,18 +25,12 @@ class MappedClassMismatchException extends \Consistence\PhpException implements 
 		$this->valueClassName = $valueClassName;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getMappedClassName()
+	public function getMappedClassName(): string
 	{
 		return $this->mappedClassName;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getValueClassName()
+	public function getValueClassName(): string
 	{
 		return $this->valueClassName;
 	}

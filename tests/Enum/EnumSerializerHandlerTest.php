@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Consistence\JmsSerializer\Enum;
 
 use JMS\Serializer\Handler\HandlerRegistry;
+use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerBuilder;
 
 use SimpleXMLElement;
@@ -31,7 +34,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('<single_enum><![CDATA[%s]]></single_enum>', RoleEnum::ADMIN), $xml);
 	}
 
-	public function jsonTypesProvider()
+	public function jsonTypesProvider(): array
 	{
 		return [
 			[TypeEnum::INTEGER, '1'],
@@ -57,7 +60,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('"type_enum":%s', $serializedValue), $json);
 	}
 
-	public function xmlTypesProvider()
+	public function xmlTypesProvider(): array
 	{
 		return [
 			[TypeEnum::INTEGER, '1'],
@@ -466,10 +469,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	/**
-	 * @return \JMS\Serializer\Serializer
-	 */
-	private function getSerializer()
+	private function getSerializer(): Serializer
 	{
 		return SerializerBuilder::create()
 			->configureHandlers(function (HandlerRegistry $registry) {

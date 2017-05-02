@@ -10,7 +10,7 @@
 		}
 	],
 	"require": {
-		"consistence/consistence": "~0.21",
+		"consistence/consistence": "~1.0",
 		"jms/serializer": "^1.4.2"
 	},
 	"require-dev": {

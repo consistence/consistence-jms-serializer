@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Consistence\JmsSerializer\Enum;
 
 class RoleEnum extends \Consistence\Enum\Enum

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Consistence\JmsSerializer\Enum;
 
 class SerializationInvalidValueException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
@@ -8,20 +10,13 @@ class SerializationInvalidValueException extends \Consistence\PhpException imple
 	/** @var string */
 	private $propertyPath;
 
-	/**
-	 * @param string $fieldPath
-	 * @param \Exception $exception
-	 */
-	public function __construct($fieldPath, \Exception $exception)
+	public function __construct(string $fieldPath, \Throwable $exception)
 	{
 		parent::__construct(sprintf('Invalid value in property %s: %s', $fieldPath, $exception->getMessage()), $exception);
 		$this->propertyPath = $fieldPath;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getPropertyPath()
+	public function getPropertyPath(): string
 	{
 		return $this->propertyPath;
 	}

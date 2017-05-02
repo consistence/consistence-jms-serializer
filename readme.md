@@ -209,7 +209,7 @@ class RolesEnum extends \Consistence\Enum\MultiEnum
 	 * @param string $singleEnumValue
 	 * @return integer
 	 */
-	protected static function convertSingleEnumValueToValue($singleEnumValue)
+	protected static function convertSingleEnumValueToValue($singleEnumValue): int
 	{
 		return ArrayType::getValue(self::$singleMultiMap, $singleEnumValue);
 	}
@@ -220,7 +220,7 @@ class RolesEnum extends \Consistence\Enum\MultiEnum
 	 * @param integer $value
 	 * @return string
 	 */
-	protected static function convertValueToSingleEnumValue($value)
+	protected static function convertValueToSingleEnumValue(int $value): string
 	{
 		return ArrayType::getKey(self::$singleMultiMap, $value);
 	}

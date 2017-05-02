@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Consistence\JmsSerializer\Enum;
 
 class DeserializationInvalidValueException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
@@ -8,20 +10,13 @@ class DeserializationInvalidValueException extends \Consistence\PhpException imp
 	/** @var string */
 	private $fieldPath;
 
-	/**
-	 * @param string $fieldPath
-	 * @param \Exception $exception
-	 */
-	public function __construct($fieldPath, \Exception $exception)
+	public function __construct(string $fieldPath, \Throwable $exception)
 	{
 		parent::__construct(sprintf('Invalid value in field %s: %s', $fieldPath, $exception->getMessage()), $exception);
 		$this->fieldPath = $fieldPath;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getFieldPath()
+	public function getFieldPath(): string
 	{
 		return $this->fieldPath;
 	}

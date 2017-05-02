@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Consistence\JmsSerializer\Enum;
 
 use Closure;
@@ -30,7 +32,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	/**
 	 * @return string[][]
 	 */
-	public static function getSubscribingMethods()
+	public static function getSubscribingMethods(): array
 	{
 		$formats = ['json', 'xml', 'yml'];
 		$methods = [];
@@ -155,7 +157,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 * @param \JMS\Serializer\Context $context
 	 * @return \Consistence\Enum\Enum
 	 */
-	public function deserializeEnum(VisitorInterface $visitor, $data, array $type, Context $context)
+	public function deserializeEnum(VisitorInterface $visitor, $data, array $type, Context $context): Enum
 	{
 		try {
 			return $this->deserializeEnumValue($visitor, $data, $type, $context);
@@ -173,7 +175,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 * @param \JMS\Serializer\Context $context
 	 * @return \Consistence\Enum\Enum
 	 */
-	private function deserializeEnumValue(VisitorInterface $visitor, $data, array $type, Context $context)
+	private function deserializeEnumValue(VisitorInterface $visitor, $data, array $type, Context $context): Enum
 	{
 		$enumClass = $this->getEnumClass($type);
 		if ($this->hasAsSingleParameter($type)) {
@@ -217,7 +219,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 * @param mixed[] $type
 	 * @return string
 	 */
-	private function getEnumClass(array $type)
+	private function getEnumClass(array $type): string
 	{
 		if (!$this->hasEnumClassParameter($type)) {
 			throw new \Consistence\JmsSerializer\Enum\MissingEnumNameException();
@@ -234,7 +236,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 * @param mixed[] $type
 	 * @return boolean
 	 */
-	private function hasEnumClassParameter(array $type)
+	private function hasEnumClassParameter(array $type): bool
 	{
 		return isset($type['params'][0])
 			&& isset($type['params'][0]['name']);
@@ -244,9 +246,9 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 * @param mixed[] $type
 	 * @return boolean
 	 */
-	private function hasAsSingleParameter(array $type)
+	private function hasAsSingleParameter(array $type): bool
 	{
-		return $this->findParameter($type, function (array $parameter) {
+		return $this->findParameter($type, function (array $parameter): bool {
 			return $parameter['name'] === self::PARAM_MULTI_AS_SINGLE;
 		}) !== null;
 	}
@@ -257,7 +259,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 */
 	private function findDeserializationType(array $type)
 	{
-		$parameter = $this->findParameter($type, function (array $parameter) {
+		$parameter = $this->findParameter($type, function (array $parameter): bool {
 			return EnumValueType::isValidValue($parameter['name']);
 		});
 
@@ -278,21 +280,14 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 		return ArrayType::findValueByCallback($type['params'], $callback);
 	}
 
-	/**
-	 * @param string $enumClass
-	 */
-	private function checkMultiEnum($enumClass)
+	private function checkMultiEnum(string $enumClass)
 	{
 		if (!is_a($enumClass, MultiEnum::class, true)) {
 			throw new \Consistence\JmsSerializer\Enum\NotMultiEnumException($enumClass);
 		}
 	}
 
-	/**
-	 * @param \JMS\Serializer\Context $context
-	 * @return string
-	 */
-	private function getPropertyPath(Context $context)
+	private function getPropertyPath(Context $context): string
 	{
 		$path = '';
 		$lastPropertyMetadata = null;
@@ -311,12 +306,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 		return $path;
 	}
 
-	/**
-	 * @param \JMS\Serializer\VisitorInterface $visitor
-	 * @param \JMS\Serializer\Context $context
-	 * @return string
-	 */
-	private function getFieldPath(VisitorInterface $visitor, Context $context)
+	private function getFieldPath(VisitorInterface $visitor, Context $context): string
 	{
 		$path = '';
 		foreach ($context->getMetadataStack() as $element) {

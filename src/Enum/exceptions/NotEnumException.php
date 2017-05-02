@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Consistence\JmsSerializer\Enum;
 
 class NotEnumException extends \Consistence\PhpException implements \Consistence\JmsSerializer\Enum\Exception
@@ -8,20 +10,13 @@ class NotEnumException extends \Consistence\PhpException implements \Consistence
 	/** @var string */
 	private $className;
 
-	/**
-	 * @param string $className
-	 * @param \Exception|null $previous
-	 */
-	public function __construct($className, \Exception $previous = null)
+	public function __construct(string $className, \Throwable $previous = null)
 	{
 		parent::__construct(sprintf('Class "%s" is not an Enum', $className), $previous);
 		$this->className = $className;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getClassName()
+	public function getClassName(): string
 	{
 		return $this->className;
 	}
