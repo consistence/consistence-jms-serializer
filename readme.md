@@ -20,8 +20,8 @@ namespace Consistence\JmsSerializer\Example\User;
 class Sex extends \Consistence\Enum\Enum
 {
 
-	const FEMALE = 'female';
-	const MALE = 'male';
+	public const FEMALE = 'female';
+	public const MALE = 'male';
 
 }
 ```
@@ -179,9 +179,9 @@ use JMS\Serializer\Annotation as JMS;
 class RoleEnum extends \Consistence\Enum\Enum
 {
 
-	const USER = 'user';
-	const EMPLOYEE = 'employee';
-	const ADMIN = 'admin';
+	public const USER = 'user';
+	public const EMPLOYEE = 'employee';
+	public const ADMIN = 'admin';
 
 }
 

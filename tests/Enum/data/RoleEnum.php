@@ -7,10 +7,10 @@ namespace Consistence\JmsSerializer\Enum;
 class RoleEnum extends \Consistence\Enum\Enum
 {
 
-	const USER = 'user';
+	public const USER = 'user';
 
-	const EMPLOYEE = 'employee';
+	public const EMPLOYEE = 'employee';
 
-	const ADMIN = 'admin';
+	public const ADMIN = 'admin';
 
 }

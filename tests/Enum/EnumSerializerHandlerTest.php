@@ -13,7 +13,7 @@ use stdClass;
 class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 {
 
-	public function testSerializeEnumToJson()
+	public function testSerializeEnumToJson(): void
 	{
 		$user = new User();
 		$user->singleEnum = RoleEnum::get(RoleEnum::ADMIN);
@@ -23,7 +23,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('"single_enum":"%s"', RoleEnum::ADMIN), $json);
 	}
 
-	public function testSerializeEnumToXml()
+	public function testSerializeEnumToXml(): void
 	{
 		$user = new User();
 		$user->singleEnum = RoleEnum::get(RoleEnum::ADMIN);
@@ -33,6 +33,9 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('<single_enum><![CDATA[%s]]></single_enum>', RoleEnum::ADMIN), $xml);
 	}
 
+	/**
+	 * @return mixed[][]
+	 */
 	public function jsonTypesProvider(): array
 	{
 		return [
@@ -49,7 +52,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 * @param mixed $value
 	 * @param string $serializedValue
 	 */
-	public function testSerializeJsonTypes($value, $serializedValue)
+	public function testSerializeJsonTypes($value, $serializedValue): void
 	{
 		$user = new User();
 		$user->typeEnum = TypeEnum::get($value);
@@ -59,6 +62,9 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('"type_enum":%s', $serializedValue), $json);
 	}
 
+	/**
+	 * @return mixed[][]
+	 */
 	public function xmlTypesProvider(): array
 	{
 		return [
@@ -75,7 +81,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 * @param mixed $value
 	 * @param string $serializedValue
 	 */
-	public function testSerializeXmlTypes($value, $serializedValue)
+	public function testSerializeXmlTypes($value, $serializedValue): void
 	{
 		$user = new User();
 		$user->typeEnum = TypeEnum::get($value);
@@ -85,7 +91,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('<type_enum>%s</type_enum>', $serializedValue), $xml);
 	}
 
-	public function testDeserializeEnumFromJson()
+	public function testDeserializeEnumFromJson(): void
 	{
 		$serializer = $this->getSerializer();
 		$user = $serializer->deserialize(sprintf('{
@@ -95,7 +101,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertSame(RoleEnum::get(RoleEnum::ADMIN), $user->singleEnum);
 	}
 
-	public function testDeserializeEnumFromXml()
+	public function testDeserializeEnumFromXml(): void
 	{
 		$serializer = $this->getSerializer();
 		$user = $serializer->deserialize(sprintf(
@@ -115,7 +121,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 * @param mixed $value
 	 * @param string $serializedValue
 	 */
-	public function testDeserializeJsonTypes($value, $serializedValue)
+	public function testDeserializeJsonTypes($value, $serializedValue): void
 	{
 		$serializer = $this->getSerializer();
 		$user = $serializer->deserialize(sprintf('{
@@ -125,7 +131,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertSame(TypeEnum::get($value), $user->typeEnum);
 	}
 
-	public function testSerializeMultiEnum()
+	public function testSerializeMultiEnum(): void
 	{
 		$user = new User();
 		$roles = RolesEnum::getMultiByEnums([
@@ -139,7 +145,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('"multi_enum":%d', $roles->getValue()), $json);
 	}
 
-	public function testDeserializeMultiEnum()
+	public function testDeserializeMultiEnum(): void
 	{
 		$roles = RolesEnum::getMultiByEnums([
 			RoleEnum::get(RoleEnum::ADMIN),
@@ -153,7 +159,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertSame($roles, $user->multiEnum);
 	}
 
-	public function testSerializeArrayOfEnums()
+	public function testSerializeArrayOfEnums(): void
 	{
 		$user = new User();
 		$user->arrayOfSingleEnums = [
@@ -166,7 +172,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('"array_of_single_enums":["%s","%s"]', RoleEnum::ADMIN, RoleEnum::EMPLOYEE), $json);
 	}
 
-	public function testDeserializeArrayOfEnums()
+	public function testDeserializeArrayOfEnums(): void
 	{
 		$serializer = $this->getSerializer();
 		$user = $serializer->deserialize(sprintf('{
@@ -183,7 +189,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		], $user->arrayOfSingleEnums, true);
 	}
 
-	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToJson()
+	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToJson(): void
 	{
 		$user = new User();
 		$user->multiEnumAsSingleEnumsArray = RolesEnum::getMultiByEnums([
@@ -196,7 +202,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('"multi_enum_as_single_enums_array":["%s","%s"]', RoleEnum::EMPLOYEE, RoleEnum::ADMIN), $json);
 	}
 
-	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToXml()
+	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToXml(): void
 	{
 		$user = new User();
 		$user->multiEnumAsSingleEnumsArrayWithType = RolesEnum::getMultiByEnums([
@@ -210,7 +216,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('<entry><![CDATA[%s]]></entry>', RoleEnum::EMPLOYEE), $xml);
 	}
 
-	public function testDeserializeMultiEnumAsSingleEnumsArrayFromJson()
+	public function testDeserializeMultiEnumAsSingleEnumsArrayFromJson(): void
 	{
 		$serializer = $this->getSerializer();
 		$user = $serializer->deserialize(sprintf('{
@@ -226,7 +232,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		]), $user->multiEnumAsSingleEnumsArray);
 	}
 
-	public function testDeserializeMultiEnumAsSingleEnumsArrayFromXml()
+	public function testDeserializeMultiEnumAsSingleEnumsArrayFromXml(): void
 	{
 		$serializer = $this->getSerializer();
 		$user = $serializer->deserialize(sprintf(
@@ -246,7 +252,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		]), $user->multiEnumAsSingleEnumsArrayWithType);
 	}
 
-	public function testSerializeEnumWithoutName()
+	public function testSerializeEnumWithoutName(): void
 	{
 		$user = new User();
 		$user->missingEnumName = RoleEnum::get(RoleEnum::ADMIN);
@@ -256,7 +262,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$this->assertContains(sprintf('"missing_enum_name":"%s"', RoleEnum::ADMIN), $json);
 	}
 
-	public function testDeserializeEnumWithoutName()
+	public function testDeserializeEnumWithoutName(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -267,7 +273,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}', RoleEnum::ADMIN), User::class, 'json');
 	}
 
-	public function testDeserializeEnumInvalidClass()
+	public function testDeserializeEnumInvalidClass(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -281,7 +287,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testSerializeEnumInvalidValue()
+	public function testSerializeEnumInvalidValue(): void
 	{
 		$user = new User();
 		$user->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
@@ -299,7 +305,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testSerializeEnumInvalidValueEmbededObject()
+	public function testSerializeEnumInvalidValueEmbededObject(): void
 	{
 		$embededUser = new User();
 		$embededUser->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
@@ -320,7 +326,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumInvalidValue()
+	public function testDeserializeEnumInvalidValue(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -337,7 +343,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumInvalidValueEmbededObject()
+	public function testDeserializeEnumInvalidValueEmbededObject(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -354,7 +360,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testSerializeEnumAsSingleEnumsArrayNotMappedSingleEnum()
+	public function testSerializeEnumAsSingleEnumsArrayNotMappedSingleEnum(): void
 	{
 		$user = new User();
 		$user->multiNoSingleEnumMapped = FooEnum::getMulti(FooEnum::FOO);
@@ -368,7 +374,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumAsSingleEnumsArrayNotMappedSingleEnum()
+	public function testDeserializeEnumAsSingleEnumsArrayNotMappedSingleEnum(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -382,7 +388,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testSerializeEnumAsSingleEnumsArrayNotMultiEnum()
+	public function testSerializeEnumAsSingleEnumsArrayNotMultiEnum(): void
 	{
 		$user = new User();
 		$user->singleMappedAsMulti = RoleEnum::get(RoleEnum::ADMIN);
@@ -396,7 +402,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumAsSingleEnumsArrayNotMultiEnum()
+	public function testDeserializeEnumAsSingleEnumsArrayNotMultiEnum(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -413,7 +419,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumAsSingleEnumsArrayNoArrayGiven()
+	public function testDeserializeEnumAsSingleEnumsArrayNoArrayGiven(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -430,7 +436,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumFromXmlWithoutDeserializationType()
+	public function testDeserializeEnumFromXmlWithoutDeserializationType(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -451,7 +457,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumWithWrongDeserializationType()
+	public function testDeserializeEnumWithWrongDeserializationType(): void
 	{
 		$serializer = $this->getSerializer();
 
@@ -471,7 +477,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	private function getSerializer(): Serializer
 	{
 		return SerializerBuilder::create()
-			->configureHandlers(function (HandlerRegistry $registry) {
+			->configureHandlers(function (HandlerRegistry $registry): void {
 				$registry->registerSubscribingHandler(new EnumSerializerHandler());
 			})
 			->build();

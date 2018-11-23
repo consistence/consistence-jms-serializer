@@ -13,7 +13,7 @@ class MappedClassMismatchException extends \Consistence\PhpException
 	/** @var string */
 	private $valueClassName;
 
-	public function __construct(string $mappedClassName, string $valueClassName, \Throwable $previous = null)
+	public function __construct(string $mappedClassName, string $valueClassName, ?\Throwable $previous = null)
 	{
 		parent::__construct(sprintf(
 			'Class of given value "%s" does not match mapped %s<%s>',

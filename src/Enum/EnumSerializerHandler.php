@@ -19,12 +19,12 @@ use Traversable;
 class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandlerInterface
 {
 
-	const PARAM_MULTI_AS_SINGLE = 'as_single';
+	public const PARAM_MULTI_AS_SINGLE = 'as_single';
 
-	const PATH_PROPERTY_SEPARATOR = '::';
-	const PATH_FIELD_SEPARATOR = '.';
+	private const PATH_PROPERTY_SEPARATOR = '::';
+	private const PATH_FIELD_SEPARATOR = '.';
 
-	const TYPE_ENUM = 'enum';
+	public const TYPE_ENUM = 'enum';
 
 	/**
 	 * @return string[][]
@@ -254,7 +254,7 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 * @param mixed[] $type
 	 * @return \Consistence\JmsSerializer\Enum\EnumValueType|null
 	 */
-	private function findDeserializationType(array $type)
+	private function findDeserializationType(array $type): ?EnumValueType
 	{
 		$parameter = $this->findParameter($type, function (array $parameter): bool {
 			return EnumValueType::isValidValue($parameter['name']);
@@ -272,12 +272,12 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	 * @param \Closure $callback
 	 * @return mixed[]|null
 	 */
-	private function findParameter(array $type, Closure $callback)
+	private function findParameter(array $type, Closure $callback): ?array
 	{
 		return ArrayType::findValueByCallback($type['params'], $callback);
 	}
 
-	private function checkMultiEnum(string $enumClass)
+	private function checkMultiEnum(string $enumClass): void
 	{
 		if (!is_a($enumClass, MultiEnum::class, true)) {
 			throw new \Consistence\JmsSerializer\Enum\NotMultiEnumException($enumClass);

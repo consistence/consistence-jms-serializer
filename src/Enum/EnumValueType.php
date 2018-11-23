@@ -7,9 +7,9 @@ namespace Consistence\JmsSerializer\Enum;
 class EnumValueType extends \Consistence\Enum\Enum
 {
 
-	const INTEGER = 'int';
-	const STRING = 'string';
-	const FLOAT = 'float';
-	const BOOLEAN = 'bool';
+	public const INTEGER = 'int';
+	public const STRING = 'string';
+	public const FLOAT = 'float';
+	public const BOOLEAN = 'bool';
 
 }
