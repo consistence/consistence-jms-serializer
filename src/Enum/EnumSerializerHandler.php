@@ -9,11 +9,11 @@ use Consistence\Enum\Enum;
 use Consistence\Enum\MultiEnum;
 use Consistence\Type\ArrayType\ArrayType;
 use Consistence\Type\Type;
-use JMS\Serializer\AbstractVisitor;
 use JMS\Serializer\Context;
-use JMS\Serializer\GraphNavigator;
+use JMS\Serializer\GraphNavigatorInterface;
 use JMS\Serializer\Metadata\PropertyMetadata;
-use JMS\Serializer\VisitorInterface;
+use JMS\Serializer\Visitor\DeserializationVisitorInterface;
+use JMS\Serializer\Visitor\SerializationVisitorInterface;
 use Traversable;
 
 class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandlerInterface
@@ -35,13 +35,13 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 		$methods = [];
 		foreach ($formats as $format) {
 			$methods[] = [
-				'direction' => GraphNavigator::DIRECTION_SERIALIZATION,
+				'direction' => GraphNavigatorInterface::DIRECTION_SERIALIZATION,
 				'type' => self::TYPE_ENUM,
 				'format' => $format,
 				'method' => 'serializeEnum',
 			];
 			$methods[] = [
-				'direction' => GraphNavigator::DIRECTION_DESERIALIZATION,
+				'direction' => GraphNavigatorInterface::DIRECTION_DESERIALIZATION,
 				'type' => self::TYPE_ENUM,
 				'format' => $format,
 				'method' => 'deserializeEnum',
@@ -52,29 +52,28 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	}
 
 	/**
-	 * @param \JMS\Serializer\VisitorInterface $visitor
+	 * @param \JMS\Serializer\Visitor\SerializationVisitorInterface $visitor
 	 * @param \Consistence\Enum\Enum $enum
 	 * @param mixed[] $type
 	 * @param \JMS\Serializer\Context $context
 	 * @return mixed
 	 */
-	public function serializeEnum(VisitorInterface $visitor, Enum $enum, array $type, Context $context)
+	public function serializeEnum(SerializationVisitorInterface $visitor, Enum $enum, array $type, Context $context)
 	{
 		try {
-			return $this->serializeEnumValue($visitor, $enum, $type, $context);
+			return $this->serializeEnumValue($visitor, $enum, $type);
 		} catch (\Consistence\JmsSerializer\Enum\MappedClassMismatchException $e) {
 			throw new \Consistence\JmsSerializer\Enum\SerializationInvalidValueException($this->getPropertyPath($context), $e);
 		}
 	}
 
 	/**
-	 * @param \JMS\Serializer\VisitorInterface $visitor
+	 * @param \JMS\Serializer\Visitor\SerializationVisitorInterface $visitor
 	 * @param \Consistence\Enum\Enum $enum
 	 * @param mixed[] $type
-	 * @param \JMS\Serializer\Context $context
 	 * @return mixed
 	 */
-	private function serializeEnumValue(VisitorInterface $visitor, Enum $enum, array $type, Context $context)
+	private function serializeEnumValue(SerializationVisitorInterface $visitor, Enum $enum, array $type)
 	{
 		if ($this->hasEnumClassParameter($type)) {
 			$mappedEnumClass = $this->getEnumClass($type);
@@ -98,47 +97,33 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 						],
 					],
 				];
-				return $visitor->visitArray(array_values($enum->getEnums()), $arrayValueType, $context);
+				return $visitor->visitArray(array_values($enum->getEnums()), $arrayValueType);
 			}
 		}
 
-		return $this->serializationVisitType($visitor, $enum, $type, $context);
+		return $this->serializationVisitType($visitor, $enum, $type);
 	}
 
 	/**
-	 * @param \JMS\Serializer\VisitorInterface $visitor
+	 * @param \JMS\Serializer\Visitor\SerializationVisitorInterface $visitor
 	 * @param \Consistence\Enum\Enum $enum
 	 * @param mixed[] $typeMetadata
-	 * @param \JMS\Serializer\Context $context
 	 * @return mixed
 	 */
-	private function serializationVisitType(VisitorInterface $visitor, Enum $enum, array $typeMetadata, Context $context)
+	private function serializationVisitType(SerializationVisitorInterface $visitor, Enum $enum, array $typeMetadata)
 	{
 		$value = $enum->getValue();
 		$valueType = EnumValueType::get(Type::getType($value));
 
-		return $this->visitType($visitor, $value, $valueType, $typeMetadata, $context);
-	}
-
-	/**
-	 * @param \JMS\Serializer\VisitorInterface $visitor
-	 * @param mixed $data
-	 * @param \Consistence\JmsSerializer\Enum\EnumValueType $dataType
-	 * @param mixed[] $typeMetadata
-	 * @param \JMS\Serializer\Context $context
-	 * @return mixed
-	 */
-	private function visitType(VisitorInterface $visitor, $data, EnumValueType $dataType, array $typeMetadata, Context $context)
-	{
 		switch (true) {
-			case $dataType->equalsValue(EnumValueType::INTEGER):
-				return $visitor->visitInteger($data, $typeMetadata, $context);
-			case $dataType->equalsValue(EnumValueType::STRING):
-				return $visitor->visitString($data, $typeMetadata, $context);
-			case $dataType->equalsValue(EnumValueType::FLOAT):
-				return $visitor->visitDouble($data, $typeMetadata, $context);
-			case $dataType->equalsValue(EnumValueType::BOOLEAN):
-				return $visitor->visitBoolean($data, $typeMetadata, $context);
+			case $valueType->equalsValue(EnumValueType::INTEGER):
+				return $visitor->visitInteger($value, $typeMetadata);
+			case $valueType->equalsValue(EnumValueType::STRING):
+				return $visitor->visitString($value, $typeMetadata);
+			case $valueType->equalsValue(EnumValueType::FLOAT):
+				return $visitor->visitDouble($value, $typeMetadata);
+			case $valueType->equalsValue(EnumValueType::BOOLEAN):
+				return $visitor->visitBoolean($value, $typeMetadata);
 			// @codeCoverageIgnoreStart
 			// should never happen, other types are not allowed in Enums
 			default:
@@ -148,31 +133,30 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 	}
 
 	/**
-	 * @param \JMS\Serializer\VisitorInterface $visitor
+	 * @param \JMS\Serializer\Visitor\DeserializationVisitorInterface $visitor
 	 * @param mixed $data
 	 * @param mixed[] $type
 	 * @param \JMS\Serializer\Context $context
 	 * @return \Consistence\Enum\Enum
 	 */
-	public function deserializeEnum(VisitorInterface $visitor, $data, array $type, Context $context): Enum
+	public function deserializeEnum(DeserializationVisitorInterface $visitor, $data, array $type, Context $context): Enum
 	{
 		try {
-			return $this->deserializeEnumValue($visitor, $data, $type, $context);
+			return $this->deserializeEnumValue($visitor, $data, $type);
 		} catch (\Consistence\Enum\InvalidEnumValueException $e) {
-			throw new \Consistence\JmsSerializer\Enum\DeserializationInvalidValueException($this->getFieldPath($visitor, $context), $e);
+			throw new \Consistence\JmsSerializer\Enum\DeserializationInvalidValueException($this->getFieldPath($context), $e);
 		} catch (\Consistence\JmsSerializer\Enum\NotIterableValueException $e) {
-			throw new \Consistence\JmsSerializer\Enum\DeserializationInvalidValueException($this->getFieldPath($visitor, $context), $e);
+			throw new \Consistence\JmsSerializer\Enum\DeserializationInvalidValueException($this->getFieldPath($context), $e);
 		}
 	}
 
 	/**
-	 * @param \JMS\Serializer\VisitorInterface $visitor
+	 * @param \JMS\Serializer\Visitor\DeserializationVisitorInterface $visitor
 	 * @param mixed $data
 	 * @param mixed[] $type
-	 * @param \JMS\Serializer\Context $context
 	 * @return \Consistence\Enum\Enum
 	 */
-	private function deserializeEnumValue(VisitorInterface $visitor, $data, array $type, Context $context): Enum
+	private function deserializeEnumValue(DeserializationVisitorInterface $visitor, $data, array $type): Enum
 	{
 		$enumClass = $this->getEnumClass($type);
 		if ($this->hasAsSingleParameter($type)) {
@@ -186,30 +170,43 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 				throw new \Consistence\JmsSerializer\Enum\NotIterableValueException($data);
 			}
 			foreach ($data as $item) {
-				$singleEnums[] = $singleEnumClass::get($this->deserializationVisitType($visitor, $item, $type, $context));
+				$singleEnums[] = $singleEnumClass::get($this->deserializationVisitType($visitor, $item, $type));
 			}
 
 			return $enumClass::getMultiByEnums($singleEnums);
 		}
 
-		return $enumClass::get($this->deserializationVisitType($visitor, $data, $type, $context));
+		return $enumClass::get($this->deserializationVisitType($visitor, $data, $type));
 	}
 
 	/**
-	 * @param \JMS\Serializer\VisitorInterface $visitor
+	 * @param \JMS\Serializer\Visitor\DeserializationVisitorInterface $visitor
 	 * @param mixed $data
 	 * @param mixed[] $typeMetadata
-	 * @param \JMS\Serializer\Context $context
 	 * @return mixed
 	 */
-	private function deserializationVisitType(VisitorInterface $visitor, $data, array $typeMetadata, Context $context)
+	private function deserializationVisitType(DeserializationVisitorInterface $visitor, $data, array $typeMetadata)
 	{
 		$deserializationType = $this->findDeserializationType($typeMetadata);
 		if ($deserializationType === null) {
 			return $data;
 		}
 
-		return $this->visitType($visitor, $data, $deserializationType, $typeMetadata, $context);
+		switch (true) {
+			case $deserializationType->equalsValue(EnumValueType::INTEGER):
+				return $visitor->visitInteger($data, $typeMetadata);
+			case $deserializationType->equalsValue(EnumValueType::STRING):
+				return $visitor->visitString($data, $typeMetadata);
+			case $deserializationType->equalsValue(EnumValueType::FLOAT):
+				return $visitor->visitDouble($data, $typeMetadata);
+			case $deserializationType->equalsValue(EnumValueType::BOOLEAN):
+				return $visitor->visitBoolean($data, $typeMetadata);
+			// @codeCoverageIgnoreStart
+			// should never happen, other types are not allowed in Enums
+			default:
+				throw new \Exception('Unexpected type');
+		}
+		// @codeCoverageIgnoreEnd
 	}
 
 	/**
@@ -303,16 +300,12 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 		return $path;
 	}
 
-	private function getFieldPath(VisitorInterface $visitor, Context $context): string
+	private function getFieldPath(Context $context): string
 	{
 		$path = '';
 		foreach ($context->getMetadataStack() as $element) {
 			if ($element instanceof PropertyMetadata) {
 				$name = ($element->serializedName !== null) ? $element->serializedName : $element->name;
-				if ($visitor instanceof AbstractVisitor) {
-					$name = $visitor->getNamingStrategy()->translateName($element);
-				}
-
 				$path = $name . self::PATH_FIELD_SEPARATOR . $path;
 			}
 		}

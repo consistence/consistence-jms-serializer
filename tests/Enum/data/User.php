@@ -87,4 +87,28 @@ class User
 	 */
 	public $typeEnumWithType;
 
+	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\TypeEnum, string>")
+	 * @var \Consistence\JmsSerializer\Enum\TypeEnum
+	 */
+	public $string;
+
+	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\TypeEnum, int>")
+	 * @var \Consistence\JmsSerializer\Enum\TypeEnum
+	 */
+	public $int;
+
+	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\TypeEnum, bool>")
+	 * @var \Consistence\JmsSerializer\Enum\TypeEnum
+	 */
+	public $bool;
+
+	/**
+	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\TypeEnum, float>")
+	 * @var \Consistence\JmsSerializer\Enum\TypeEnum
+	 */
+	public $float;
+
 }

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Consistence\JmsSerializer\Enum;
 
+use Consistence\Type\Type;
 use JMS\Serializer\Handler\HandlerRegistry;
 use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerBuilder;
@@ -124,11 +125,12 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	public function testDeserializeJsonTypes($value, $serializedValue): void
 	{
 		$serializer = $this->getSerializer();
+		$type = Type::getType($value);
 		$user = $serializer->deserialize(sprintf('{
-			"type_enum": %s
-		}', $serializedValue), User::class, 'json');
+			"%s": %s
+		}', $type, $serializedValue), User::class, 'json');
 		$this->assertInstanceOf(User::class, $user);
-		$this->assertSame(TypeEnum::get($value), $user->typeEnum);
+		$this->assertSame(TypeEnum::get($value), $user->$type);
 	}
 
 	public function testSerializeMultiEnum(): void
