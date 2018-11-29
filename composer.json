@@ -12,9 +12,10 @@
 	"require": {
 		"php": "~7.2",
 		"consistence/consistence": "~1.0",
-		"jms/serializer": "^1.4.2"
+		"jms/serializer": "~2.0"
 	},
 	"require-dev": {
+		"ext-simplexml": "*",
 		"consistence/coding-standard": "3.5",
 		"jakub-onderka/php-console-highlighter": "0.4",
 		"jakub-onderka/php-parallel-lint": "1.0",
