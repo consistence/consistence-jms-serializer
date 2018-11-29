@@ -6,8 +6,8 @@ namespace Consistence\JmsSerializer\Enum;
 
 use Consistence\Type\Type;
 use JMS\Serializer\Handler\HandlerRegistry;
-use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerBuilder;
+use JMS\Serializer\SerializerInterface;
 use SimpleXMLElement;
 use stdClass;
 
@@ -476,7 +476,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	private function getSerializer(): Serializer
+	private function getSerializer(): SerializerInterface
 	{
 		return SerializerBuilder::create()
 			->configureHandlers(function (HandlerRegistry $registry): void {
