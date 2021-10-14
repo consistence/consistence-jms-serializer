@@ -362,6 +362,25 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
+	public function testDeserializeMultiEnumWithInvalidValueType(): void
+	{
+		$serializer = $this->getSerializer();
+
+		try {
+			$serializer->deserialize(sprintf('{
+				"multi_enum": "%s"
+			}', 'foo'), User::class, 'json');
+
+			$this->fail('Exception expected.');
+
+		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
+			$this->assertEquals('multi_enum', $e->getFieldPath());
+			$previous = $e->getPrevious();
+			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
+			$this->assertSame('foo', $previous->getValue());
+		}
+	}
+
 	public function testSerializeEnumAsSingleEnumsArrayNotMappedSingleEnum(): void
 	{
 		$user = new User();
