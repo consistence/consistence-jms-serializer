@@ -362,6 +362,44 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
+	public function testDeserializeEnumWhenValueIsArray(): void
+	{
+		$serializer = $this->getSerializer();
+
+		try {
+			$serializer->deserialize('{
+				"single_enum": [1, 2, 3]
+			}', User::class, 'json');
+
+			$this->fail('Exception expected.');
+
+		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
+			$this->assertEquals('single_enum', $e->getFieldPath());
+			$previous = $e->getPrevious();
+			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
+			$this->assertEquals([1, 2, 3], $previous->getValue());
+		}
+	}
+
+	public function testDeserializeEnumWhenValueIsObject(): void
+	{
+		$serializer = $this->getSerializer();
+
+		try {
+			$serializer->deserialize('{
+				"single_enum": {"foo": "bar"}
+			}', User::class, 'json');
+
+			$this->fail('Exception expected.');
+
+		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
+			$this->assertEquals('single_enum', $e->getFieldPath());
+			$previous = $e->getPrevious();
+			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
+			$this->assertEquals(['foo' => 'bar'], $previous->getValue());
+		}
+	}
+
 	public function testDeserializeMultiEnumWithInvalidValueType(): void
 	{
 		$serializer = $this->getSerializer();
