@@ -10,7 +10,7 @@ class SerializationInvalidValueException extends \Consistence\PhpException
 	/** @var string */
 	private $propertyPath;
 
-	public function __construct(string $fieldPath, ?\Throwable $exception)
+	public function __construct(string $fieldPath, \Throwable $exception)
 	{
 		parent::__construct(sprintf('Invalid value in property %s: %s', $fieldPath, $exception->getMessage()), $exception);
 		$this->propertyPath = $fieldPath;
