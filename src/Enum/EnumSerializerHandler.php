@@ -176,6 +176,10 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 			return $enumClass::getMultiByEnums($singleEnums);
 		}
 
+		if ($this->isMultiEnumClass($enumClass) && Type::getType($data) !== 'int') {
+			throw new \Consistence\Enum\InvalidEnumValueException($data, $enumClass);
+		}
+
 		return $enumClass::get($this->deserializationVisitType($visitor, $data, $type));
 	}
 
@@ -274,9 +278,14 @@ class EnumSerializerHandler implements \JMS\Serializer\Handler\SubscribingHandle
 		return ArrayType::findValueByCallback($type['params'], $callback);
 	}
 
+	private function isMultiEnumClass(string $enumClass): bool
+	{
+		return is_a($enumClass, MultiEnum::class, true);
+	}
+
 	private function checkMultiEnum(string $enumClass): void
 	{
-		if (!is_a($enumClass, MultiEnum::class, true)) {
+		if (!$this->isMultiEnumClass($enumClass)) {
 			throw new \Consistence\JmsSerializer\Enum\NotMultiEnumException($enumClass);
 		}
 	}

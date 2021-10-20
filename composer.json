@@ -11,7 +11,7 @@
 	],
 	"require": {
 		"php": "~7.2",
-		"consistence/consistence": "~1.0|~2.0",
+		"consistence/consistence": "^2.0.2",
 		"jms/serializer": "~2.0|~3.0"
 	},
 	"require-dev": {
