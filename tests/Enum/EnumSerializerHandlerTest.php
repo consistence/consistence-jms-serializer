@@ -53,7 +53,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 * @param mixed $value
 	 * @param string $serializedValue
 	 */
-	public function testSerializeJsonTypes($value, $serializedValue): void
+	public function testSerializeJsonTypes($value, string $serializedValue): void
 	{
 		$user = new User();
 		$user->typeEnum = TypeEnum::get($value);
@@ -82,7 +82,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 * @param mixed $value
 	 * @param string $serializedValue
 	 */
-	public function testSerializeXmlTypes($value, $serializedValue): void
+	public function testSerializeXmlTypes($value, string $serializedValue): void
 	{
 		$user = new User();
 		$user->typeEnum = TypeEnum::get($value);
@@ -122,7 +122,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 * @param mixed $value
 	 * @param string $serializedValue
 	 */
-	public function testDeserializeJsonTypes($value, $serializedValue): void
+	public function testDeserializeJsonTypes($value, string $serializedValue): void
 	{
 		$serializer = $this->getSerializer();
 		$type = Type::getType($value);
