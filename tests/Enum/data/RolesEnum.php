@@ -24,7 +24,7 @@ class RolesEnum extends \Consistence\Enum\MultiEnum
 	/**
 	 * Converts value representing a value from single Enum to MultiEnum counterpart
 	 *
-	 * @phpcsSuppress SlevomatCodingStandard.TypeHints.TypeHintDeclaration.MissingParameterTypeHint
+	 * @phpcsSuppress SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint
 	 *
 	 * @param string $singleEnumValue
 	 * @return int
