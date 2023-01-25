@@ -12,7 +12,7 @@ class NotMultiEnumException extends \Consistence\PhpException
 
 	public function __construct(string $className, ?\Throwable $previous = null)
 	{
-		parent::__construct(sprintf('Class "%s" is not an MultiEnum', $className), $previous);
+		parent::__construct(sprintf('Class "%s" is not a MultiEnum', $className), $previous);
 		$this->className = $className;
 	}
 
