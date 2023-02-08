@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Consistence\JmsSerializer\Enum;
 
 use Consistence\Type\Type;
+use Generator;
 use JMS\Serializer\Handler\HandlerRegistry;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializerInterface;
@@ -36,16 +37,14 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
-	 * @return mixed[][]
+	 * @return mixed[][]|\Generator
 	 */
-	public function jsonTypeDataProvider(): array
+	public function jsonTypeDataProvider(): Generator
 	{
-		return [
-			[TypeEnum::INTEGER, '1'],
-			[TypeEnum::STRING, '"foo"'],
-			[TypeEnum::FLOAT, '2.5'],
-			[TypeEnum::BOOLEAN, 'true'],
-		];
+		yield [TypeEnum::INTEGER, '1'];
+		yield [TypeEnum::STRING, '"foo"'];
+		yield [TypeEnum::FLOAT, '2.5'];
+		yield [TypeEnum::BOOLEAN, 'true'];
 	}
 
 	/**
@@ -65,16 +64,14 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
-	 * @return mixed[][]
+	 * @return mixed[][]|\Generator
 	 */
-	public function xmlTypeDataProvider(): array
+	public function xmlTypeDataProvider(): Generator
 	{
-		return [
-			[TypeEnum::INTEGER, '1'],
-			[TypeEnum::STRING, '<![CDATA[foo]]>'],
-			[TypeEnum::FLOAT, '2.5'],
-			[TypeEnum::BOOLEAN, 'true'],
-		];
+		yield [TypeEnum::INTEGER, '1'];
+		yield [TypeEnum::STRING, '<![CDATA[foo]]>'];
+		yield [TypeEnum::FLOAT, '2.5'];
+		yield [TypeEnum::BOOLEAN, 'true'];
 	}
 
 	/**
