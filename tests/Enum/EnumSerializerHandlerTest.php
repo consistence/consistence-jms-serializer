@@ -41,10 +41,22 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function jsonTypeDataProvider(): Generator
 	{
-		yield [TypeEnum::INTEGER, '1'];
-		yield [TypeEnum::STRING, '"foo"'];
-		yield [TypeEnum::FLOAT, '2.5'];
-		yield [TypeEnum::BOOLEAN, 'true'];
+		yield [
+			TypeEnum::INTEGER,
+			'1',
+		];
+		yield [
+			TypeEnum::STRING,
+			'"foo"',
+		];
+		yield [
+			TypeEnum::FLOAT,
+			'2.5',
+		];
+		yield [
+			TypeEnum::BOOLEAN,
+			'true',
+		];
 	}
 
 	/**
@@ -68,10 +80,22 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function xmlTypeDataProvider(): Generator
 	{
-		yield [TypeEnum::INTEGER, '1'];
-		yield [TypeEnum::STRING, '<![CDATA[foo]]>'];
-		yield [TypeEnum::FLOAT, '2.5'];
-		yield [TypeEnum::BOOLEAN, 'true'];
+		yield [
+			TypeEnum::INTEGER,
+			'1',
+		];
+		yield [
+			TypeEnum::STRING,
+			'<![CDATA[foo]]>',
+		];
+		yield [
+			TypeEnum::FLOAT,
+			'2.5',
+		];
+		yield [
+			TypeEnum::BOOLEAN,
+			'true',
+		];
 	}
 
 	/**
