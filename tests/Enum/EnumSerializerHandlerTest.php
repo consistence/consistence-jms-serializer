@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Consistence\JmsSerializer\Enum;
 
+use Closure;
 use Consistence\Type\Type;
 use Generator;
 use JMS\Serializer\Handler\HandlerRegistry;
@@ -17,24 +18,172 @@ use stdClass;
 class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 {
 
-	public function testSerializeEnumToJson(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function serializeEnumPropertyDataProvider(): Generator
 	{
-		$user = new User();
-		$user->singleEnum = RoleEnum::get(RoleEnum::ADMIN);
+		yield 'single enum' => (function (): array {
+			$role = RoleEnum::get(RoleEnum::ADMIN);
 
-		$serializer = $this->getSerializer();
-		$json = $serializer->serialize($user, 'json');
-		Assert::assertStringContainsString('"single_enum":"admin"', $json);
+			$user = new User();
+			$user->singleEnum = $role;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"single_enum":"admin"',
+				'serializedPropertyInXml' => '<single_enum><![CDATA[admin]]></single_enum>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($role): void {
+					Assert::assertInstanceOf(User::class, $user);
+					Assert::assertSame($role, $user->singleEnum);
+				},
+				'supportedXmlDeserialization' => false,
+			];
+		})();
+
+		yield 'single enum with type' => (function (): array {
+			$role = RoleEnum::get(RoleEnum::ADMIN);
+
+			$user = new User();
+			$user->singleEnumWithType = $role;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"single_enum_with_type":"admin"',
+				'serializedPropertyInXml' => '<single_enum_with_type><![CDATA[admin]]></single_enum_with_type>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($role): void {
+					Assert::assertInstanceOf(User::class, $user);
+					Assert::assertSame($role, $user->singleEnumWithType);
+				},
+				'supportedXmlDeserialization' => true,
+			];
+		})();
+
+		yield 'multi enum' => (function (): array {
+			$roles = RolesEnum::getMultiByEnums([
+				RoleEnum::get(RoleEnum::ADMIN),
+				RoleEnum::get(RoleEnum::EMPLOYEE),
+			]);
+
+			$user = new User();
+			$user->multiEnum = $roles;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"multi_enum":3',
+				'serializedPropertyInXml' => '<multi_enum>3</multi_enum>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($roles): void {
+					Assert::assertInstanceOf(User::class, $user);
+					Assert::assertSame($roles, $user->multiEnum);
+				},
+				'supportedXmlDeserialization' => false,
+			];
+		})();
+
+		yield 'array of single enums' => (function (): array {
+			$roles = [
+				RoleEnum::get(RoleEnum::ADMIN),
+				RoleEnum::get(RoleEnum::EMPLOYEE),
+			];
+
+			$user = new User();
+			$user->arrayOfSingleEnums = $roles;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"array_of_single_enums":["admin","employee"]',
+				'serializedPropertyInXml' => '<array_of_single_enums>'
+					. '<entry><![CDATA[admin]]></entry>'
+					. '<entry><![CDATA[employee]]></entry>'
+					. '</array_of_single_enums>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($roles): void {
+					foreach ($roles as $expectedRole) {
+						Assert::assertContains($expectedRole, $user->arrayOfSingleEnums);
+					}
+					Assert::assertCount(2, $user->arrayOfSingleEnums);
+				},
+				'supportedXmlDeserialization' => false,
+			];
+		})();
+
+		yield 'multi enum as single enums array' => (function (): array {
+			$roles = RolesEnum::getMultiByEnums([
+				RoleEnum::get(RoleEnum::ADMIN),
+				RoleEnum::get(RoleEnum::EMPLOYEE),
+			]);
+
+			$user = new User();
+			$user->multiEnumAsSingleEnumsArray = $roles;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"multi_enum_as_single_enums_array":["employee","admin"]',
+				'serializedPropertyInXml' => '<multi_enum_as_single_enums_array>'
+					. '<entry><![CDATA[employee]]></entry>'
+					. '<entry><![CDATA[admin]]></entry>'
+					. '</multi_enum_as_single_enums_array>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($roles): void {
+					Assert::assertSame($roles, $user->multiEnumAsSingleEnumsArray);
+				},
+				'supportedXmlDeserialization' => false,
+			];
+		})();
+
+		yield 'multi enum as single enums array with type' => (function (): array {
+			$roles = RolesEnum::getMultiByEnums([
+				RoleEnum::get(RoleEnum::ADMIN),
+				RoleEnum::get(RoleEnum::EMPLOYEE),
+			]);
+
+			$user = new User();
+			$user->multiEnumAsSingleEnumsArrayWithType = $roles;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"multi_enum_as_single_enums_array_with_type":["employee","admin"]',
+				'serializedPropertyInXml' => '<multi_enum_as_single_enums_array_with_type>'
+					. '<entry><![CDATA[employee]]></entry>'
+					. '<entry><![CDATA[admin]]></entry>'
+					. '</multi_enum_as_single_enums_array_with_type>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($roles): void {
+					Assert::assertSame($roles, $user->multiEnumAsSingleEnumsArrayWithType);
+				},
+				'supportedXmlDeserialization' => true,
+			];
+		})();
 	}
 
-	public function testSerializeEnumToXml(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function serializeEnumDataProvider(): Generator
 	{
-		$user = new User();
-		$user->singleEnum = RoleEnum::get(RoleEnum::ADMIN);
+		foreach ($this->serializeEnumPropertyDataProvider() as $caseName => $caseData) {
+			yield $caseName . ' (JSON)' => [
+				'format' => 'json',
+				'user' => $caseData['user'],
+				'serializedProperty' => $caseData['serializedPropertyInJson'],
+			];
+			yield $caseName . ' (XML)' => [
+				'format' => 'xml',
+				'user' => $caseData['user'],
+				'serializedProperty' => $caseData['serializedPropertyInXml'],
+			];
+		}
+	}
 
+	/**
+	 * @dataProvider serializeEnumDataProvider
+	 *
+	 * @param string $format
+	 * @param \Consistence\JmsSerializer\Enum\User $user
+	 * @param string $serializedProperty
+	 */
+	public function testSerializeEnum(string $format, User $user, string $serializedProperty): void
+	{
 		$serializer = $this->getSerializer();
-		$xml = $serializer->serialize($user, 'xml');
-		Assert::assertStringContainsString('<single_enum><![CDATA[admin]]></single_enum>', $xml);
+		$serializedOutput = $serializer->serialize($user, $format);
+		Assert::assertStringContainsString($serializedProperty, $serializedOutput);
 	}
 
 	/**
@@ -122,29 +271,68 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		Assert::assertStringContainsString(sprintf('<type_enum>%s</type_enum>', $serializedValue), $xml);
 	}
 
-	public function testDeserializeEnumFromJson(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function deserializeEnumFromJsonDataProvider(): Generator
 	{
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize('{
-			"single_enum": "admin"
-		}', User::class, 'json');
-		Assert::assertInstanceOf(User::class, $user);
-		Assert::assertSame(RoleEnum::get(RoleEnum::ADMIN), $user->singleEnum);
+		foreach ($this->serializeEnumPropertyDataProvider() as $caseName => $caseData) {
+			yield $caseName => [
+				'serializedProperty' => $caseData['serializedPropertyInJson'],
+				'userAssertsCallback' => $caseData['deserializationUserAssertsCallback'],
+			];
+		}
 	}
 
-	public function testDeserializeEnumFromXml(): void
+	/**
+	 * @dataProvider deserializeEnumFromJsonDataProvider
+	 *
+	 * @param string $serializedProperty
+	 * @param \Closure $userAssertsCallback
+	 */
+	public function testDeserializeEnumFromJson(string $serializedProperty, Closure $userAssertsCallback): void
 	{
 		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(
+		$user = $serializer->deserialize(sprintf('{%s}', $serializedProperty), User::class, 'json');
+		Assert::assertInstanceOf(User::class, $user);
+		$userAssertsCallback($user);
+	}
+
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function deserializeEnumFromXmlDataProvider(): Generator
+	{
+		foreach ($this->serializeEnumPropertyDataProvider() as $caseName => $caseData) {
+			if (!$caseData['supportedXmlDeserialization']) {
+				continue;
+			}
+
+			yield $caseName => [
+				'serializedProperty' => $caseData['serializedPropertyInXml'],
+				'userAssertsCallback' => $caseData['deserializationUserAssertsCallback'],
+			];
+		}
+	}
+
+	/**
+	 * @dataProvider deserializeEnumFromXmlDataProvider
+	 *
+	 * @param string $serializedProperty
+	 * @param \Closure $userAssertsCallback
+	 */
+	public function testDeserializeEnumFromXml(string $serializedProperty, Closure $userAssertsCallback): void
+	{
+		$serializer = $this->getSerializer();
+		$user = $serializer->deserialize(sprintf(
 			'<?xml version="1.0" encoding="UTF-8"?>'
 			. '<result>'
-			. '<single_enum_with_type><![CDATA[admin]]></single_enum_with_type>'
+			. '%s'
 			. '</result>',
-			User::class,
-			'xml'
-		);
+			$serializedProperty
+		), User::class, 'xml');
 		Assert::assertInstanceOf(User::class, $user);
-		Assert::assertSame(RoleEnum::get(RoleEnum::ADMIN), $user->singleEnumWithType);
+		$userAssertsCallback($user);
 	}
 
 	/**
@@ -162,128 +350,6 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}', $type, $serializedValue), User::class, 'json');
 		Assert::assertInstanceOf(User::class, $user);
 		Assert::assertSame(TypeEnum::get($value), $user->$type);
-	}
-
-	public function testSerializeMultiEnum(): void
-	{
-		$user = new User();
-		$user->multiEnum = RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]);
-
-		$serializer = $this->getSerializer();
-		$json = $serializer->serialize($user, 'json');
-		Assert::assertStringContainsString('"multi_enum":3', $json);
-	}
-
-	public function testDeserializeMultiEnum(): void
-	{
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize('{
-			"multi_enum": 3
-		}', User::class, 'json');
-		Assert::assertInstanceOf(User::class, $user);
-		Assert::assertSame(RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]), $user->multiEnum);
-	}
-
-	public function testSerializeArrayOfEnums(): void
-	{
-		$user = new User();
-		$user->arrayOfSingleEnums = [
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		];
-
-		$serializer = $this->getSerializer();
-		$json = $serializer->serialize($user, 'json');
-		Assert::assertStringContainsString('"array_of_single_enums":["admin","employee"]', $json);
-	}
-
-	public function testDeserializeArrayOfEnums(): void
-	{
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize('{
-			"array_of_single_enums": [
-				"admin",
-				"employee"
-			]
-		}', User::class, 'json');
-		Assert::assertInstanceOf(User::class, $user);
-		foreach ([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		] as $expectedRole) {
-			Assert::assertContains($expectedRole, $user->arrayOfSingleEnums);
-		}
-		Assert::assertCount(2, $user->arrayOfSingleEnums);
-	}
-
-	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToJson(): void
-	{
-		$user = new User();
-		$user->multiEnumAsSingleEnumsArray = RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]);
-
-		$serializer = $this->getSerializer();
-		$json = $serializer->serialize($user, 'json');
-		Assert::assertStringContainsString('"multi_enum_as_single_enums_array":["employee","admin"]', $json);
-	}
-
-	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToXml(): void
-	{
-		$user = new User();
-		$user->multiEnumAsSingleEnumsArrayWithType = RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]);
-
-		$serializer = $this->getSerializer();
-		$xml = $serializer->serialize($user, 'xml');
-		Assert::assertStringContainsString('<entry><![CDATA[admin]]></entry>', $xml);
-		Assert::assertStringContainsString('<entry><![CDATA[employee]]></entry>', $xml);
-	}
-
-	public function testDeserializeMultiEnumAsSingleEnumsArrayFromJson(): void
-	{
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize('{
-			"multi_enum_as_single_enums_array": [
-				"admin",
-				"employee"
-			]
-		}', User::class, 'json');
-		Assert::assertInstanceOf(User::class, $user);
-		Assert::assertSame(RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]), $user->multiEnumAsSingleEnumsArray);
-	}
-
-	public function testDeserializeMultiEnumAsSingleEnumsArrayFromXml(): void
-	{
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(
-			'<?xml version="1.0" encoding="UTF-8"?>'
-			. '<result>'
-			. '<multi_enum_as_single_enums_array_with_type>'
-			. '<entry><![CDATA[employee]]></entry>'
-			. '<entry><![CDATA[admin]]></entry>'
-			. '</multi_enum_as_single_enums_array_with_type>'
-			. '</result>',
-			User::class,
-			'xml'
-		);
-		Assert::assertInstanceOf(User::class, $user);
-		Assert::assertSame(RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]), $user->multiEnumAsSingleEnumsArrayWithType);
 	}
 
 	public function testSerializeEnumWithoutName(): void
