@@ -127,13 +127,14 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	public function testDeserializeEnumFromXml(): void
 	{
 		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(sprintf(
+		$user = $serializer->deserialize(
 			'<?xml version="1.0" encoding="UTF-8"?>'
 			. '<result>'
 			. '<single_enum_with_type><![CDATA[admin]]></single_enum_with_type>'
 			. '</result>',
-			RoleEnum::ADMIN
-		), User::class, 'xml');
+			User::class,
+			'xml'
+		);
 		Assert::assertInstanceOf(User::class, $user);
 		Assert::assertSame(RoleEnum::get(RoleEnum::ADMIN), $user->singleEnumWithType);
 	}
@@ -261,7 +262,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	public function testDeserializeMultiEnumAsSingleEnumsArrayFromXml(): void
 	{
 		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(sprintf(
+		$user = $serializer->deserialize(
 			'<?xml version="1.0" encoding="UTF-8"?>'
 			. '<result>'
 			. '<multi_enum_as_single_enums_array_with_type>'
@@ -269,8 +270,9 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			. '<entry><![CDATA[admin]]></entry>'
 			. '</multi_enum_as_single_enums_array_with_type>'
 			. '</result>',
-			RoleEnum::ADMIN
-		), User::class, 'xml');
+			User::class,
+			'xml'
+		);
 		Assert::assertInstanceOf(User::class, $user);
 		Assert::assertSame(RolesEnum::getMultiByEnums([
 			RoleEnum::get(RoleEnum::ADMIN),
@@ -524,13 +526,14 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$serializer = $this->getSerializer();
 
 		try {
-			$serializer->deserialize(sprintf(
+			$serializer->deserialize(
 				'<?xml version="1.0" encoding="UTF-8"?>'
 				. '<result>'
 				. '<single_enum><![CDATA[admin]]></single_enum>'
 				. '</result>',
-				RoleEnum::ADMIN
-			), User::class, 'xml');
+				User::class,
+				'xml'
+			);
 			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
 			Assert::assertSame('single_enum', $e->getFieldPath());
