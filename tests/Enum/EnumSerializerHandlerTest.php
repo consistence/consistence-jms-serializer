@@ -39,24 +39,41 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	/**
 	 * @return mixed[][]|\Generator
 	 */
-	public function jsonTypeDataProvider(): Generator
+	public function typeDataProvider(): Generator
 	{
 		yield 'integer' => [
 			'value' => TypeEnum::INTEGER,
-			'serializedValue' => '1',
+			'serializedValueInJson' => '1',
+			'serializedValueInXml' => '1',
 		];
 		yield 'string' => [
 			'value' => TypeEnum::STRING,
-			'serializedValue' => '"foo"',
+			'serializedValueInJson' => '"foo"',
+			'serializedValueInXml' => '<![CDATA[foo]]>',
 		];
 		yield 'float' => [
 			'value' => TypeEnum::FLOAT,
-			'serializedValue' => '2.5',
+			'serializedValueInJson' => '2.5',
+			'serializedValueInXml' => '2.5',
 		];
 		yield 'boolean' => [
 			'value' => TypeEnum::BOOLEAN,
-			'serializedValue' => 'true',
+			'serializedValueInJson' => 'true',
+			'serializedValueInXml' => 'true',
 		];
+	}
+
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function jsonTypeDataProvider(): Generator
+	{
+		foreach ($this->typeDataProvider() as $caseName => $caseData) {
+			yield $caseName => [
+				'value' => $caseData['value'],
+				'serializedValue' => $caseData['serializedValueInJson'],
+			];
+		}
 	}
 
 	/**
@@ -80,22 +97,12 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	 */
 	public function xmlTypeDataProvider(): Generator
 	{
-		yield 'integer' => [
-			'value' => TypeEnum::INTEGER,
-			'serializedValue' => '1',
-		];
-		yield 'string' => [
-			'value' => TypeEnum::STRING,
-			'serializedValue' => '<![CDATA[foo]]>',
-		];
-		yield 'float' => [
-			'value' => TypeEnum::FLOAT,
-			'serializedValue' => '2.5',
-		];
-		yield 'boolean' => [
-			'value' => TypeEnum::BOOLEAN,
-			'serializedValue' => 'true',
-		];
+		foreach ($this->typeDataProvider() as $caseName => $caseData) {
+			yield $caseName => [
+				'value' => $caseData['value'],
+				'serializedValue' => $caseData['serializedValueInXml'],
+			];
+		}
 	}
 
 	/**
