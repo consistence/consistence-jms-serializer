@@ -9,6 +9,7 @@ use Generator;
 use JMS\Serializer\Handler\HandlerRegistry;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\Visitor\Factory\XmlSerializationVisitorFactory;
 use PHPUnit\Framework\Assert;
 use SimpleXMLElement;
 use stdClass;
@@ -567,7 +568,13 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 
 	private function getSerializer(): SerializerInterface
 	{
+		$xmlSerializationVisitorFactory = new XmlSerializationVisitorFactory();
+		$xmlSerializationVisitorFactory->setFormatOutput(false);
+
 		return SerializerBuilder::create()
+			->addDefaultDeserializationVisitors()
+			->addDefaultSerializationVisitors()
+			->setSerializationVisitor('xml', $xmlSerializationVisitorFactory)
 			->configureHandlers(function (HandlerRegistry $registry): void {
 				$registry->registerSubscribingHandler(new EnumSerializerHandler());
 			})
