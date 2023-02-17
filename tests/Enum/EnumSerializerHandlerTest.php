@@ -309,20 +309,20 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testSerializeEnumInvalidValueEmbededObject(): void
+	public function testSerializeEnumInvalidValueEmbeddedObject(): void
 	{
-		$embededUser = new User();
-		$embededUser->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
+		$embeddedUser = new User();
+		$embeddedUser->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
 
 		$user = new User();
-		$user->embededObject = $embededUser;
+		$user->embeddedObject = $embeddedUser;
 		$serializer = $this->getSerializer();
 
 		try {
 			$serializer->serialize($user, 'json');
 			$this->fail();
 		} catch (\Consistence\JmsSerializer\Enum\SerializationInvalidValueException $e) {
-			$this->assertEquals(sprintf('%s::$embededObject::$multiEnum', User::class), $e->getPropertyPath());
+			$this->assertEquals(sprintf('%s::$embeddedObject::$multiEnum', User::class), $e->getPropertyPath());
 			$previous = $e->getPrevious();
 			$this->assertInstanceOf(\Consistence\JmsSerializer\Enum\MappedClassMismatchException::class, $previous);
 			$this->assertSame(RolesEnum::class, $previous->getMappedClassName());
@@ -347,17 +347,17 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumInvalidValueEmbededObject(): void
+	public function testDeserializeEnumInvalidValueEmbeddedObject(): void
 	{
 		$serializer = $this->getSerializer();
 
 		try {
-			$serializer->deserialize(sprintf('{"embeded_object": {
+			$serializer->deserialize(sprintf('{"embedded_object": {
 				"single_enum": "%s"
 			}}', 'foo'), User::class, 'json');
 			$this->fail();
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertEquals('embeded_object.single_enum', $e->getFieldPath());
+			$this->assertEquals('embedded_object.single_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
 			$this->assertSame('foo', $previous->getValue());

@@ -67,7 +67,7 @@ class User
 	 * @JMS\Type("Consistence\JmsSerializer\Enum\User")
 	 * @var \Consistence\JmsSerializer\Enum\User
 	 */
-	public $embededObject;
+	public $embeddedObject;
 
 	/**
 	 * @JMS\Type("enum<Consistence\JmsSerializer\Enum\FooEnum, as_single>")
