@@ -387,42 +387,65 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testSerializeEnumInvalidValue(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function serializeEnumInvalidValueDataProvider(): Generator
 	{
-		$user = new User();
-		$user->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
-		$serializer = $this->getSerializer();
+		yield 'single enum passed to multi enum' => [
+			'user' => (function (): User {
+				$user = new User();
+				$user->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
 
-		try {
-			$serializer->serialize($user, 'json');
-			Assert::fail('Exception expected');
-		} catch (\Consistence\JmsSerializer\Enum\SerializationInvalidValueException $e) {
-			Assert::assertSame(sprintf('%s::$multiEnum', User::class), $e->getPropertyPath());
-			$previous = $e->getPrevious();
-			Assert::assertInstanceOf(\Consistence\JmsSerializer\Enum\MappedClassMismatchException::class, $previous);
-			Assert::assertSame(RolesEnum::class, $previous->getMappedClassName());
-			Assert::assertSame(RoleEnum::class, $previous->getValueClassName());
-		}
+				return $user;
+			})(),
+			'propertyPath' => sprintf('%s::$multiEnum', User::class),
+			'mappedClassName' => RolesEnum::class,
+			'valueClassName' => RoleEnum::class,
+		];
+
+		yield 'single enum passed to multi enum defined in embedded object' => [
+			'user' => (function (): User {
+				$embeddedUser = new User();
+				$embeddedUser->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
+
+				$user = new User();
+				$user->embeddedObject = $embeddedUser;
+
+				return $user;
+			})(),
+			'propertyPath' => sprintf('%s::$embeddedObject::$multiEnum', User::class),
+			'mappedClassName' => RolesEnum::class,
+			'valueClassName' => RoleEnum::class,
+		];
 	}
 
-	public function testSerializeEnumInvalidValueEmbeddedObject(): void
+	/**
+	 * @dataProvider serializeEnumInvalidValueDataProvider
+	 *
+	 * @param \Consistence\JmsSerializer\Enum\User $user
+	 * @param string $propertyPath
+	 * @param string $mappedClassName
+	 * @param string $valueClassName
+	 */
+	public function testSerializeEnumInvalidValue(
+		User $user,
+		string $propertyPath,
+		string $mappedClassName,
+		string $valueClassName
+	): void
 	{
-		$embeddedUser = new User();
-		$embeddedUser->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
-
-		$user = new User();
-		$user->embeddedObject = $embeddedUser;
 		$serializer = $this->getSerializer();
 
 		try {
 			$serializer->serialize($user, 'json');
 			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\SerializationInvalidValueException $e) {
-			Assert::assertSame(sprintf('%s::$embeddedObject::$multiEnum', User::class), $e->getPropertyPath());
+			Assert::assertSame($propertyPath, $e->getPropertyPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\JmsSerializer\Enum\MappedClassMismatchException::class, $previous);
-			Assert::assertSame(RolesEnum::class, $previous->getMappedClassName());
-			Assert::assertSame(RoleEnum::class, $previous->getValueClassName());
+			Assert::assertSame($mappedClassName, $previous->getMappedClassName());
+			Assert::assertSame($valueClassName, $previous->getValueClassName());
 		}
 	}
 
