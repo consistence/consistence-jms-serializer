@@ -449,94 +449,68 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testDeserializeEnumInvalidValue(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function deserializeEnumInvalidValueDataProvider(): Generator
 	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize('{
+		yield 'string instead of single enum' => [
+			'serializedProperty' => '"single_enum": "foo"',
+			'field' => 'single_enum',
+			'value' => 'foo',
+		];
+		yield 'string instead of single enum in embedded object' => [
+			'serializedProperty' => '"embedded_object": {
 				"single_enum": "foo"
-			}', User::class, 'json');
-			Assert::fail('Exception expected');
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertSame('single_enum', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			Assert::assertSame('foo', $previous->getValue());
-		}
+			}',
+			'field' => 'embedded_object.single_enum',
+			'value' => 'foo',
+		];
+		yield 'array instead of single enum' => [
+			'serializedProperty' => '"single_enum": [1, 2, 3]',
+			'field' => 'single_enum',
+			'value' => [1, 2, 3],
+		];
+		yield 'object instead of single enum' => [
+			'serializedProperty' => '"single_enum": {"foo": "bar"}',
+			'field' => 'single_enum',
+			'value' => ['foo' => 'bar'],
+		];
+		yield 'string instead of multi enum' => [
+			'serializedProperty' => '"multi_enum": "foo"',
+			'field' => 'multi_enum',
+			'value' => 'foo',
+		];
+		yield 'integer instead of string with explicitly mapped type' => [
+			'serializedProperty' => '"type_enum_with_type": 1',
+			'field' => 'type_enum_with_type',
+			'value' => '1',
+		];
 	}
 
-	public function testDeserializeEnumInvalidValueEmbeddedObject(): void
+	/**
+	 * @dataProvider deserializeEnumInvalidValueDataProvider
+	 *
+	 * @param string $serializedProperty
+	 * @param string $field
+	 * @param mixed $value
+	 */
+	public function testDeserializeEnumInvalidValue(
+		string $serializedProperty,
+		string $field,
+		$value
+	): void
 	{
 		$serializer = $this->getSerializer();
 
 		try {
-			$serializer->deserialize('{"embedded_object": {
-				"single_enum": "foo"
-			}}', User::class, 'json');
+			$serializer->deserialize(sprintf('{%s}', $serializedProperty), User::class, 'json');
 			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertSame('embedded_object.single_enum', $e->getFieldPath());
+			Assert::assertSame($field, $e->getFieldPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			Assert::assertSame('foo', $previous->getValue());
-		}
-	}
-
-	public function testDeserializeEnumWhenValueIsArray(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize('{
-				"single_enum": [1, 2, 3]
-			}', User::class, 'json');
-
-			Assert::fail('Exception expected');
-
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertSame('single_enum', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			Assert::assertSame([1, 2, 3], $previous->getValue());
-		}
-	}
-
-	public function testDeserializeEnumWhenValueIsObject(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize('{
-				"single_enum": {"foo": "bar"}
-			}', User::class, 'json');
-
-			Assert::fail('Exception expected');
-
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertSame('single_enum', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			Assert::assertSame(['foo' => 'bar'], $previous->getValue());
-		}
-	}
-
-	public function testDeserializeMultiEnumWithInvalidValueType(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize('{
-				"multi_enum": "foo"
-			}', User::class, 'json');
-
-			Assert::fail('Exception expected');
-
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertSame('multi_enum', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			Assert::assertSame('foo', $previous->getValue());
+			Assert::assertSame($value, $previous->getValue());
 		}
 	}
 
@@ -635,23 +609,6 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
 			Assert::assertInstanceOf(SimpleXMLElement::class, $previous->getValue());
-		}
-	}
-
-	public function testDeserializeEnumWithWrongDeserializationType(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize('{
-				"type_enum_with_type": 1
-			}', User::class, 'json');
-			Assert::fail('Exception expected');
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertSame('type_enum_with_type', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			Assert::assertSame('1', $previous->getValue());
 		}
 	}
 
