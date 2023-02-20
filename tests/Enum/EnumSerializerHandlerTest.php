@@ -185,13 +185,13 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			]
 		}', RoleEnum::ADMIN, RoleEnum::EMPLOYEE), User::class, 'json');
 		Assert::assertInstanceOf(User::class, $user);
-		Assert::assertCount(2, $user->arrayOfSingleEnums);
 		foreach ([
 			RoleEnum::get(RoleEnum::ADMIN),
 			RoleEnum::get(RoleEnum::EMPLOYEE),
 		] as $expectedRole) {
 			Assert::assertContains($expectedRole, $user->arrayOfSingleEnums);
 		}
+		Assert::assertCount(2, $user->arrayOfSingleEnums);
 	}
 
 	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToJson(): void
