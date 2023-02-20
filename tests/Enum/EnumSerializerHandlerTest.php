@@ -302,7 +302,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			$serializer->serialize($user, 'json');
 			Assert::fail();
 		} catch (\Consistence\JmsSerializer\Enum\SerializationInvalidValueException $e) {
-			Assert::assertEquals(sprintf('%s::$multiEnum', User::class), $e->getPropertyPath());
+			Assert::assertSame(sprintf('%s::$multiEnum', User::class), $e->getPropertyPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\JmsSerializer\Enum\MappedClassMismatchException::class, $previous);
 			Assert::assertSame(RolesEnum::class, $previous->getMappedClassName());
@@ -323,7 +323,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			$serializer->serialize($user, 'json');
 			Assert::fail();
 		} catch (\Consistence\JmsSerializer\Enum\SerializationInvalidValueException $e) {
-			Assert::assertEquals(sprintf('%s::$embeddedObject::$multiEnum', User::class), $e->getPropertyPath());
+			Assert::assertSame(sprintf('%s::$embeddedObject::$multiEnum', User::class), $e->getPropertyPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\JmsSerializer\Enum\MappedClassMismatchException::class, $previous);
 			Assert::assertSame(RolesEnum::class, $previous->getMappedClassName());
@@ -341,7 +341,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			}', 'foo'), User::class, 'json');
 			Assert::fail();
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertEquals('single_enum', $e->getFieldPath());
+			Assert::assertSame('single_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
 			Assert::assertSame('foo', $previous->getValue());
@@ -358,7 +358,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			}}', 'foo'), User::class, 'json');
 			Assert::fail();
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertEquals('embedded_object.single_enum', $e->getFieldPath());
+			Assert::assertSame('embedded_object.single_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
 			Assert::assertSame('foo', $previous->getValue());
@@ -377,10 +377,10 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			Assert::fail('Exception expected.');
 
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertEquals('single_enum', $e->getFieldPath());
+			Assert::assertSame('single_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			Assert::assertEquals([1, 2, 3], $previous->getValue());
+			Assert::assertSame([1, 2, 3], $previous->getValue());
 		}
 	}
 
@@ -396,10 +396,10 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			Assert::fail('Exception expected.');
 
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertEquals('single_enum', $e->getFieldPath());
+			Assert::assertSame('single_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			Assert::assertEquals(['foo' => 'bar'], $previous->getValue());
+			Assert::assertSame(['foo' => 'bar'], $previous->getValue());
 		}
 	}
 
@@ -415,7 +415,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			Assert::fail('Exception expected.');
 
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertEquals('multi_enum', $e->getFieldPath());
+			Assert::assertSame('multi_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
 			Assert::assertSame('foo', $previous->getValue());
@@ -512,7 +512,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			), User::class, 'xml');
 			Assert::fail();
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertEquals('single_enum', $e->getFieldPath());
+			Assert::assertSame('single_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
 			Assert::assertInstanceOf(SimpleXMLElement::class, $previous->getValue());
@@ -529,7 +529,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			}', User::class, 'json');
 			Assert::fail();
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			Assert::assertEquals('type_enum_with_type', $e->getFieldPath());
+			Assert::assertSame('type_enum_with_type', $e->getFieldPath());
 			$previous = $e->getPrevious();
 			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
 			Assert::assertSame('1', $previous->getValue());
