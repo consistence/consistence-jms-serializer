@@ -10,7 +10,7 @@
 		}
 	],
 	"require": {
-		"php": "~7.2",
+		"php": "^7.2",
 		"consistence/consistence": "^2.0.2",
 		"jms/serializer": "^3.2"
 	},
