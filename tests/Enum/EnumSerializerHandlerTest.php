@@ -38,7 +38,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	/**
 	 * @return mixed[][]
 	 */
-	public function jsonTypesProvider(): array
+	public function jsonTypeProvider(): array
 	{
 		return [
 			[TypeEnum::INTEGER, '1'],
@@ -49,7 +49,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
-	 * @dataProvider jsonTypesProvider
+	 * @dataProvider jsonTypeProvider
 	 *
 	 * @param mixed $value
 	 * @param string $serializedValue
@@ -67,7 +67,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	/**
 	 * @return mixed[][]
 	 */
-	public function xmlTypesProvider(): array
+	public function xmlTypeProvider(): array
 	{
 		return [
 			[TypeEnum::INTEGER, '1'],
@@ -78,7 +78,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
-	 * @dataProvider xmlTypesProvider
+	 * @dataProvider xmlTypeProvider
 	 *
 	 * @param mixed $value
 	 * @param string $serializedValue
@@ -118,7 +118,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 	}
 
 	/**
-	 * @dataProvider jsonTypesProvider
+	 * @dataProvider jsonTypeProvider
 	 *
 	 * @param mixed $value
 	 * @param string $serializedValue
