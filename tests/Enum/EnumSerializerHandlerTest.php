@@ -4,51 +4,230 @@ declare(strict_types = 1);
 
 namespace Consistence\JmsSerializer\Enum;
 
+use Closure;
 use Consistence\Type\Type;
+use Generator;
 use JMS\Serializer\Handler\HandlerRegistry;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\Visitor\Factory\XmlSerializationVisitorFactory;
+use PHPUnit\Framework\Assert;
 use SimpleXMLElement;
 use stdClass;
 
 class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 {
 
-	public function testSerializeEnumToJson(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function serializeEnumPropertyDataProvider(): Generator
 	{
-		$user = new User();
-		$user->singleEnum = RoleEnum::get(RoleEnum::ADMIN);
+		yield 'single enum' => (function (): array {
+			$role = RoleEnum::get(RoleEnum::ADMIN);
 
-		$serializer = $this->getSerializer();
-		$json = $serializer->serialize($user, 'json');
-		$this->assertStringContainsString(sprintf('"single_enum":"%s"', RoleEnum::ADMIN), $json);
-	}
+			$user = new User();
+			$user->singleEnum = $role;
 
-	public function testSerializeEnumToXml(): void
-	{
-		$user = new User();
-		$user->singleEnum = RoleEnum::get(RoleEnum::ADMIN);
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"single_enum":"admin"',
+				'serializedPropertyInXml' => '<single_enum><![CDATA[admin]]></single_enum>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($role): void {
+					Assert::assertInstanceOf(User::class, $user);
+					Assert::assertSame($role, $user->singleEnum);
+				},
+				'supportedXmlDeserialization' => false,
+			];
+		})();
 
-		$serializer = $this->getSerializer();
-		$xml = $serializer->serialize($user, 'xml');
-		$this->assertStringContainsString(sprintf('<single_enum><![CDATA[%s]]></single_enum>', RoleEnum::ADMIN), $xml);
+		yield 'single enum with type' => (function (): array {
+			$role = RoleEnum::get(RoleEnum::ADMIN);
+
+			$user = new User();
+			$user->singleEnumWithType = $role;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"single_enum_with_type":"admin"',
+				'serializedPropertyInXml' => '<single_enum_with_type><![CDATA[admin]]></single_enum_with_type>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($role): void {
+					Assert::assertInstanceOf(User::class, $user);
+					Assert::assertSame($role, $user->singleEnumWithType);
+				},
+				'supportedXmlDeserialization' => true,
+			];
+		})();
+
+		yield 'multi enum' => (function (): array {
+			$roles = RolesEnum::getMultiByEnums([
+				RoleEnum::get(RoleEnum::ADMIN),
+				RoleEnum::get(RoleEnum::EMPLOYEE),
+			]);
+
+			$user = new User();
+			$user->multiEnum = $roles;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"multi_enum":3',
+				'serializedPropertyInXml' => '<multi_enum>3</multi_enum>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($roles): void {
+					Assert::assertInstanceOf(User::class, $user);
+					Assert::assertSame($roles, $user->multiEnum);
+				},
+				'supportedXmlDeserialization' => false,
+			];
+		})();
+
+		yield 'array of single enums' => (function (): array {
+			$roles = [
+				RoleEnum::get(RoleEnum::ADMIN),
+				RoleEnum::get(RoleEnum::EMPLOYEE),
+			];
+
+			$user = new User();
+			$user->arrayOfSingleEnums = $roles;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"array_of_single_enums":["admin","employee"]',
+				'serializedPropertyInXml' => '<array_of_single_enums>'
+					. '<entry><![CDATA[admin]]></entry>'
+					. '<entry><![CDATA[employee]]></entry>'
+					. '</array_of_single_enums>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($roles): void {
+					foreach ($roles as $expectedRole) {
+						Assert::assertContains($expectedRole, $user->arrayOfSingleEnums);
+					}
+					Assert::assertCount(2, $user->arrayOfSingleEnums);
+				},
+				'supportedXmlDeserialization' => false,
+			];
+		})();
+
+		yield 'multi enum as single enums array' => (function (): array {
+			$roles = RolesEnum::getMultiByEnums([
+				RoleEnum::get(RoleEnum::ADMIN),
+				RoleEnum::get(RoleEnum::EMPLOYEE),
+			]);
+
+			$user = new User();
+			$user->multiEnumAsSingleEnumsArray = $roles;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"multi_enum_as_single_enums_array":["employee","admin"]',
+				'serializedPropertyInXml' => '<multi_enum_as_single_enums_array>'
+					. '<entry><![CDATA[employee]]></entry>'
+					. '<entry><![CDATA[admin]]></entry>'
+					. '</multi_enum_as_single_enums_array>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($roles): void {
+					Assert::assertSame($roles, $user->multiEnumAsSingleEnumsArray);
+				},
+				'supportedXmlDeserialization' => false,
+			];
+		})();
+
+		yield 'multi enum as single enums array with type' => (function (): array {
+			$roles = RolesEnum::getMultiByEnums([
+				RoleEnum::get(RoleEnum::ADMIN),
+				RoleEnum::get(RoleEnum::EMPLOYEE),
+			]);
+
+			$user = new User();
+			$user->multiEnumAsSingleEnumsArrayWithType = $roles;
+
+			return [
+				'user' => $user,
+				'serializedPropertyInJson' => '"multi_enum_as_single_enums_array_with_type":["employee","admin"]',
+				'serializedPropertyInXml' => '<multi_enum_as_single_enums_array_with_type>'
+					. '<entry><![CDATA[employee]]></entry>'
+					. '<entry><![CDATA[admin]]></entry>'
+					. '</multi_enum_as_single_enums_array_with_type>',
+				'deserializationUserAssertsCallback' => function (User $user) use ($roles): void {
+					Assert::assertSame($roles, $user->multiEnumAsSingleEnumsArrayWithType);
+				},
+				'supportedXmlDeserialization' => true,
+			];
+		})();
 	}
 
 	/**
-	 * @return mixed[][]
+	 * @return mixed[][]|\Generator
 	 */
-	public function jsonTypesProvider(): array
+	public function serializeEnumDataProvider(): Generator
 	{
-		return [
-			[TypeEnum::INTEGER, '1'],
-			[TypeEnum::STRING, '"foo"'],
-			[TypeEnum::FLOAT, '2.5'],
-			[TypeEnum::BOOLEAN, 'true'],
+		foreach ($this->serializeEnumPropertyDataProvider() as $caseName => $caseData) {
+			yield $caseName . ' (JSON)' => [
+				'format' => 'json',
+				'user' => $caseData['user'],
+				'serializedProperty' => $caseData['serializedPropertyInJson'],
+			];
+			yield $caseName . ' (XML)' => [
+				'format' => 'xml',
+				'user' => $caseData['user'],
+				'serializedProperty' => $caseData['serializedPropertyInXml'],
+			];
+		}
+	}
+
+	/**
+	 * @dataProvider serializeEnumDataProvider
+	 *
+	 * @param string $format
+	 * @param \Consistence\JmsSerializer\Enum\User $user
+	 * @param string $serializedProperty
+	 */
+	public function testSerializeEnum(string $format, User $user, string $serializedProperty): void
+	{
+		$serializer = $this->getSerializer();
+		$serializedOutput = $serializer->serialize($user, $format);
+		Assert::assertStringContainsString($serializedProperty, $serializedOutput);
+	}
+
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function typeDataProvider(): Generator
+	{
+		yield 'integer' => [
+			'value' => TypeEnum::INTEGER,
+			'serializedValueInJson' => '1',
+			'serializedValueInXml' => '1',
+		];
+		yield 'string' => [
+			'value' => TypeEnum::STRING,
+			'serializedValueInJson' => '"foo"',
+			'serializedValueInXml' => '<![CDATA[foo]]>',
+		];
+		yield 'float' => [
+			'value' => TypeEnum::FLOAT,
+			'serializedValueInJson' => '2.5',
+			'serializedValueInXml' => '2.5',
+		];
+		yield 'boolean' => [
+			'value' => TypeEnum::BOOLEAN,
+			'serializedValueInJson' => 'true',
+			'serializedValueInXml' => 'true',
 		];
 	}
 
 	/**
-	 * @dataProvider jsonTypesProvider
+	 * @return mixed[][]|\Generator
+	 */
+	public function jsonTypeDataProvider(): Generator
+	{
+		foreach ($this->typeDataProvider() as $caseName => $caseData) {
+			yield $caseName => [
+				'value' => $caseData['value'],
+				'serializedValue' => $caseData['serializedValueInJson'],
+			];
+		}
+	}
+
+	/**
+	 * @dataProvider jsonTypeDataProvider
 	 *
 	 * @param mixed $value
 	 * @param string $serializedValue
@@ -60,24 +239,24 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 
 		$serializer = $this->getSerializer();
 		$json = $serializer->serialize($user, 'json');
-		$this->assertStringContainsString(sprintf('"type_enum":%s', $serializedValue), $json);
+		Assert::assertStringContainsString(sprintf('"type_enum":%s', $serializedValue), $json);
 	}
 
 	/**
-	 * @return mixed[][]
+	 * @return mixed[][]|\Generator
 	 */
-	public function xmlTypesProvider(): array
+	public function xmlTypeDataProvider(): Generator
 	{
-		return [
-			[TypeEnum::INTEGER, '1'],
-			[TypeEnum::STRING, '<![CDATA[foo]]>'],
-			[TypeEnum::FLOAT, '2.5'],
-			[TypeEnum::BOOLEAN, 'true'],
-		];
+		foreach ($this->typeDataProvider() as $caseName => $caseData) {
+			yield $caseName => [
+				'value' => $caseData['value'],
+				'serializedValue' => $caseData['serializedValueInXml'],
+			];
+		}
 	}
 
 	/**
-	 * @dataProvider xmlTypesProvider
+	 * @dataProvider xmlTypeDataProvider
 	 *
 	 * @param mixed $value
 	 * @param string $serializedValue
@@ -89,35 +268,75 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 
 		$serializer = $this->getSerializer();
 		$xml = $serializer->serialize($user, 'xml');
-		$this->assertStringContainsString(sprintf('<type_enum>%s</type_enum>', $serializedValue), $xml);
+		Assert::assertStringContainsString(sprintf('<type_enum>%s</type_enum>', $serializedValue), $xml);
 	}
 
-	public function testDeserializeEnumFromJson(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function deserializeEnumFromJsonDataProvider(): Generator
+	{
+		foreach ($this->serializeEnumPropertyDataProvider() as $caseName => $caseData) {
+			yield $caseName => [
+				'serializedProperty' => $caseData['serializedPropertyInJson'],
+				'userAssertsCallback' => $caseData['deserializationUserAssertsCallback'],
+			];
+		}
+	}
+
+	/**
+	 * @dataProvider deserializeEnumFromJsonDataProvider
+	 *
+	 * @param string $serializedProperty
+	 * @param \Closure $userAssertsCallback
+	 */
+	public function testDeserializeEnumFromJson(string $serializedProperty, Closure $userAssertsCallback): void
 	{
 		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(sprintf('{
-			"single_enum": "%s"
-		}', RoleEnum::ADMIN), User::class, 'json');
-		$this->assertInstanceOf(User::class, $user);
-		$this->assertSame(RoleEnum::get(RoleEnum::ADMIN), $user->singleEnum);
+		$user = $serializer->deserialize(sprintf('{%s}', $serializedProperty), User::class, 'json');
+		Assert::assertInstanceOf(User::class, $user);
+		$userAssertsCallback($user);
 	}
 
-	public function testDeserializeEnumFromXml(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function deserializeEnumFromXmlDataProvider(): Generator
+	{
+		foreach ($this->serializeEnumPropertyDataProvider() as $caseName => $caseData) {
+			if (!$caseData['supportedXmlDeserialization']) {
+				continue;
+			}
+
+			yield $caseName => [
+				'serializedProperty' => $caseData['serializedPropertyInXml'],
+				'userAssertsCallback' => $caseData['deserializationUserAssertsCallback'],
+			];
+		}
+	}
+
+	/**
+	 * @dataProvider deserializeEnumFromXmlDataProvider
+	 *
+	 * @param string $serializedProperty
+	 * @param \Closure $userAssertsCallback
+	 */
+	public function testDeserializeEnumFromXml(string $serializedProperty, Closure $userAssertsCallback): void
 	{
 		$serializer = $this->getSerializer();
 		$user = $serializer->deserialize(sprintf(
 			'<?xml version="1.0" encoding="UTF-8"?>'
 			. '<result>'
-			. '<single_enum_with_type><![CDATA[admin]]></single_enum_with_type>'
+			. '%s'
 			. '</result>',
-			RoleEnum::ADMIN
+			$serializedProperty
 		), User::class, 'xml');
-		$this->assertInstanceOf(User::class, $user);
-		$this->assertSame(RoleEnum::get(RoleEnum::ADMIN), $user->singleEnumWithType);
+		Assert::assertInstanceOf(User::class, $user);
+		$userAssertsCallback($user);
 	}
 
 	/**
-	 * @dataProvider jsonTypesProvider
+	 * @dataProvider jsonTypeDataProvider
 	 *
 	 * @param mixed $value
 	 * @param string $serializedValue
@@ -129,131 +348,8 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$user = $serializer->deserialize(sprintf('{
 			"%s": %s
 		}', $type, $serializedValue), User::class, 'json');
-		$this->assertInstanceOf(User::class, $user);
-		$this->assertSame(TypeEnum::get($value), $user->$type);
-	}
-
-	public function testSerializeMultiEnum(): void
-	{
-		$user = new User();
-		$roles = RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]);
-		$user->multiEnum = $roles;
-
-		$serializer = $this->getSerializer();
-		$json = $serializer->serialize($user, 'json');
-		$this->assertStringContainsString(sprintf('"multi_enum":%d', $roles->getValue()), $json);
-	}
-
-	public function testDeserializeMultiEnum(): void
-	{
-		$roles = RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]);
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(sprintf('{
-			"multi_enum": %d
-		}', $roles->getValue()), User::class, 'json');
-		$this->assertInstanceOf(User::class, $user);
-		$this->assertSame($roles, $user->multiEnum);
-	}
-
-	public function testSerializeArrayOfEnums(): void
-	{
-		$user = new User();
-		$user->arrayOfSingleEnums = [
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		];
-
-		$serializer = $this->getSerializer();
-		$json = $serializer->serialize($user, 'json');
-		$this->assertStringContainsString(sprintf('"array_of_single_enums":["%s","%s"]', RoleEnum::ADMIN, RoleEnum::EMPLOYEE), $json);
-	}
-
-	public function testDeserializeArrayOfEnums(): void
-	{
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(sprintf('{
-			"array_of_single_enums": [
-				"%s",
-				"%s"
-			]
-		}', RoleEnum::ADMIN, RoleEnum::EMPLOYEE), User::class, 'json');
-		$this->assertInstanceOf(User::class, $user);
-		$this->assertCount(2, $user->arrayOfSingleEnums);
-		foreach ([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		] as $expectedRole) {
-			$this->assertContains($expectedRole, $user->arrayOfSingleEnums);
-		}
-	}
-
-	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToJson(): void
-	{
-		$user = new User();
-		$user->multiEnumAsSingleEnumsArray = RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]);
-
-		$serializer = $this->getSerializer();
-		$json = $serializer->serialize($user, 'json');
-		$this->assertStringContainsString(sprintf('"multi_enum_as_single_enums_array":["%s","%s"]', RoleEnum::EMPLOYEE, RoleEnum::ADMIN), $json);
-	}
-
-	public function testSerializeArrayOfEnumsAsSingleEnumsArrayToXml(): void
-	{
-		$user = new User();
-		$user->multiEnumAsSingleEnumsArrayWithType = RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]);
-
-		$serializer = $this->getSerializer();
-		$xml = $serializer->serialize($user, 'xml');
-		$this->assertStringContainsString(sprintf('<entry><![CDATA[%s]]></entry>', RoleEnum::ADMIN), $xml);
-		$this->assertStringContainsString(sprintf('<entry><![CDATA[%s]]></entry>', RoleEnum::EMPLOYEE), $xml);
-	}
-
-	public function testDeserializeMultiEnumAsSingleEnumsArrayFromJson(): void
-	{
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(sprintf('{
-			"multi_enum_as_single_enums_array": [
-				"%s",
-				"%s"
-			]
-		}', RoleEnum::ADMIN, RoleEnum::EMPLOYEE), User::class, 'json');
-		$this->assertInstanceOf(User::class, $user);
-		$this->assertSame(RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]), $user->multiEnumAsSingleEnumsArray);
-	}
-
-	public function testDeserializeMultiEnumAsSingleEnumsArrayFromXml(): void
-	{
-		$serializer = $this->getSerializer();
-		$user = $serializer->deserialize(sprintf(
-			'<?xml version="1.0" encoding="UTF-8"?>'
-			. '<result>'
-			. '<multi_enum_as_single_enums_array_with_type>'
-			. '<entry><![CDATA[employee]]></entry>'
-			. '<entry><![CDATA[admin]]></entry>'
-			. '</multi_enum_as_single_enums_array_with_type>'
-			. '</result>',
-			RoleEnum::ADMIN
-		), User::class, 'xml');
-		$this->assertInstanceOf(User::class, $user);
-		$this->assertSame(RolesEnum::getMultiByEnums([
-			RoleEnum::get(RoleEnum::ADMIN),
-			RoleEnum::get(RoleEnum::EMPLOYEE),
-		]), $user->multiEnumAsSingleEnumsArrayWithType);
+		Assert::assertInstanceOf(User::class, $user);
+		Assert::assertSame(TypeEnum::get($value), $user->$type);
 	}
 
 	public function testSerializeEnumWithoutName(): void
@@ -263,7 +359,7 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 
 		$serializer = $this->getSerializer();
 		$json = $serializer->serialize($user, 'json');
-		$this->assertStringContainsString(sprintf('"missing_enum_name":"%s"', RoleEnum::ADMIN), $json);
+		Assert::assertStringContainsString('"missing_enum_name":"admin"', $json);
 	}
 
 	public function testDeserializeEnumWithoutName(): void
@@ -272,9 +368,9 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 
 		$this->expectException(\Consistence\JmsSerializer\Enum\MissingEnumNameException::class);
 
-		$serializer->deserialize(sprintf('{
-			"missing_enum_name": "%s"
-		}', RoleEnum::ADMIN), User::class, 'json');
+		$serializer->deserialize('{
+			"missing_enum_name": "admin"
+		}', User::class, 'json');
 	}
 
 	public function testDeserializeEnumInvalidClass(): void
@@ -282,142 +378,139 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$serializer = $this->getSerializer();
 
 		try {
-			$serializer->deserialize(sprintf('{
-				"invalid_enum_class": "%s"
-			}', RoleEnum::ADMIN), User::class, 'json');
-			$this->fail();
+			$serializer->deserialize('{
+				"invalid_enum_class": "admin"
+			}', User::class, 'json');
+			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\NotEnumException $e) {
-			$this->assertSame(stdClass::class, $e->getClassName());
+			Assert::assertSame(stdClass::class, $e->getClassName());
 		}
 	}
 
-	public function testSerializeEnumInvalidValue(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function serializeEnumInvalidValueDataProvider(): Generator
 	{
-		$user = new User();
-		$user->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
+		yield 'single enum passed to multi enum' => [
+			'user' => (function (): User {
+				$user = new User();
+				$user->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
+
+				return $user;
+			})(),
+			'propertyPath' => sprintf('%s::$multiEnum', User::class),
+			'mappedClassName' => RolesEnum::class,
+			'valueClassName' => RoleEnum::class,
+		];
+
+		yield 'single enum passed to multi enum defined in embedded object' => [
+			'user' => (function (): User {
+				$embeddedUser = new User();
+				$embeddedUser->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
+
+				$user = new User();
+				$user->embeddedObject = $embeddedUser;
+
+				return $user;
+			})(),
+			'propertyPath' => sprintf('%s::$embeddedObject::$multiEnum', User::class),
+			'mappedClassName' => RolesEnum::class,
+			'valueClassName' => RoleEnum::class,
+		];
+	}
+
+	/**
+	 * @dataProvider serializeEnumInvalidValueDataProvider
+	 *
+	 * @param \Consistence\JmsSerializer\Enum\User $user
+	 * @param string $propertyPath
+	 * @param string $mappedClassName
+	 * @param string $valueClassName
+	 */
+	public function testSerializeEnumInvalidValue(
+		User $user,
+		string $propertyPath,
+		string $mappedClassName,
+		string $valueClassName
+	): void
+	{
 		$serializer = $this->getSerializer();
 
 		try {
 			$serializer->serialize($user, 'json');
-			$this->fail();
+			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\SerializationInvalidValueException $e) {
-			$this->assertEquals(sprintf('%s::$multiEnum', User::class), $e->getPropertyPath());
+			Assert::assertSame($propertyPath, $e->getPropertyPath());
 			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\JmsSerializer\Enum\MappedClassMismatchException::class, $previous);
-			$this->assertSame(RolesEnum::class, $previous->getMappedClassName());
-			$this->assertSame(RoleEnum::class, $previous->getValueClassName());
+			Assert::assertInstanceOf(\Consistence\JmsSerializer\Enum\MappedClassMismatchException::class, $previous);
+			Assert::assertSame($mappedClassName, $previous->getMappedClassName());
+			Assert::assertSame($valueClassName, $previous->getValueClassName());
 		}
 	}
 
-	public function testSerializeEnumInvalidValueEmbededObject(): void
+	/**
+	 * @return mixed[][]|\Generator
+	 */
+	public function deserializeEnumInvalidValueDataProvider(): Generator
 	{
-		$embededUser = new User();
-		$embededUser->multiEnum = RoleEnum::get(RoleEnum::ADMIN);
-
-		$user = new User();
-		$user->embededObject = $embededUser;
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->serialize($user, 'json');
-			$this->fail();
-		} catch (\Consistence\JmsSerializer\Enum\SerializationInvalidValueException $e) {
-			$this->assertEquals(sprintf('%s::$embededObject::$multiEnum', User::class), $e->getPropertyPath());
-			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\JmsSerializer\Enum\MappedClassMismatchException::class, $previous);
-			$this->assertSame(RolesEnum::class, $previous->getMappedClassName());
-			$this->assertSame(RoleEnum::class, $previous->getValueClassName());
-		}
+		yield 'string instead of single enum' => [
+			'serializedProperty' => '"single_enum": "foo"',
+			'field' => 'single_enum',
+			'value' => 'foo',
+		];
+		yield 'string instead of single enum in embedded object' => [
+			'serializedProperty' => '"embedded_object": {
+				"single_enum": "foo"
+			}',
+			'field' => 'embedded_object.single_enum',
+			'value' => 'foo',
+		];
+		yield 'array instead of single enum' => [
+			'serializedProperty' => '"single_enum": [1, 2, 3]',
+			'field' => 'single_enum',
+			'value' => [1, 2, 3],
+		];
+		yield 'object instead of single enum' => [
+			'serializedProperty' => '"single_enum": {"foo": "bar"}',
+			'field' => 'single_enum',
+			'value' => ['foo' => 'bar'],
+		];
+		yield 'string instead of multi enum' => [
+			'serializedProperty' => '"multi_enum": "foo"',
+			'field' => 'multi_enum',
+			'value' => 'foo',
+		];
+		yield 'integer instead of string with explicitly mapped type' => [
+			'serializedProperty' => '"type_enum_with_type": 1',
+			'field' => 'type_enum_with_type',
+			'value' => '1',
+		];
 	}
 
-	public function testDeserializeEnumInvalidValue(): void
+	/**
+	 * @dataProvider deserializeEnumInvalidValueDataProvider
+	 *
+	 * @param string $serializedProperty
+	 * @param string $field
+	 * @param mixed $value
+	 */
+	public function testDeserializeEnumInvalidValue(
+		string $serializedProperty,
+		string $field,
+		$value
+	): void
 	{
 		$serializer = $this->getSerializer();
 
 		try {
-			$serializer->deserialize(sprintf('{
-				"single_enum": "%s"
-			}', 'foo'), User::class, 'json');
-			$this->fail();
+			$serializer->deserialize(sprintf('{%s}', $serializedProperty), User::class, 'json');
+			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertEquals('single_enum', $e->getFieldPath());
+			Assert::assertSame($field, $e->getFieldPath());
 			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			$this->assertSame('foo', $previous->getValue());
-		}
-	}
-
-	public function testDeserializeEnumInvalidValueEmbededObject(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize(sprintf('{"embeded_object": {
-				"single_enum": "%s"
-			}}', 'foo'), User::class, 'json');
-			$this->fail();
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertEquals('embeded_object.single_enum', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			$this->assertSame('foo', $previous->getValue());
-		}
-	}
-
-	public function testDeserializeEnumWhenValueIsArray(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize('{
-				"single_enum": [1, 2, 3]
-			}', User::class, 'json');
-
-			$this->fail('Exception expected.');
-
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertEquals('single_enum', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			$this->assertEquals([1, 2, 3], $previous->getValue());
-		}
-	}
-
-	public function testDeserializeEnumWhenValueIsObject(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize('{
-				"single_enum": {"foo": "bar"}
-			}', User::class, 'json');
-
-			$this->fail('Exception expected.');
-
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertEquals('single_enum', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			$this->assertEquals(['foo' => 'bar'], $previous->getValue());
-		}
-	}
-
-	public function testDeserializeMultiEnumWithInvalidValueType(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize(sprintf('{
-				"multi_enum": "%s"
-			}', 'foo'), User::class, 'json');
-
-			$this->fail('Exception expected.');
-
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertEquals('multi_enum', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			$this->assertSame('foo', $previous->getValue());
+			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
+			Assert::assertSame($value, $previous->getValue());
 		}
 	}
 
@@ -429,9 +522,9 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 
 		try {
 			$serializer->serialize($user, 'json');
-			$this->fail();
+			Assert::fail('Exception expected');
 		} catch (\Consistence\Enum\NoSingleEnumSpecifiedException $e) {
-			$this->assertSame(FooEnum::class, $e->getClass());
+			Assert::assertSame(FooEnum::class, $e->getClass());
 		}
 	}
 
@@ -440,12 +533,12 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$serializer = $this->getSerializer();
 
 		try {
-			$serializer->deserialize(sprintf('{
-				"multi_no_single_enum_mapped": %d
-			}', FooEnum::FOO), User::class, 'json');
-			$this->fail();
+			$serializer->deserialize('{
+				"multi_no_single_enum_mapped": 1
+			}', User::class, 'json');
+			Assert::fail('Exception expected');
 		} catch (\Consistence\Enum\NoSingleEnumSpecifiedException $e) {
-			$this->assertSame(FooEnum::class, $e->getClass());
+			Assert::assertSame(FooEnum::class, $e->getClass());
 		}
 	}
 
@@ -457,9 +550,9 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 
 		try {
 			$serializer->serialize($user, 'json');
-			$this->fail();
+			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\NotMultiEnumException $e) {
-			$this->assertSame(RoleEnum::class, $e->getClassName());
+			Assert::assertSame(RoleEnum::class, $e->getClassName());
 		}
 	}
 
@@ -468,15 +561,15 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$serializer = $this->getSerializer();
 
 		try {
-			$serializer->deserialize(sprintf('{
+			$serializer->deserialize('{
 				"single_mapped_as_multi": [
-					"%s",
-					"%s"
+					"admin",
+					"employee"
 				]
-			}', RoleEnum::ADMIN, RoleEnum::EMPLOYEE), User::class, 'json');
-			$this->fail();
+			}', User::class, 'json');
+			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\NotMultiEnumException $e) {
-			$this->assertSame(RoleEnum::class, $e->getClassName());
+			Assert::assertSame(RoleEnum::class, $e->getClassName());
 		}
 	}
 
@@ -488,12 +581,12 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 			$serializer->deserialize('{
 				"multi_enum_as_single_enums_array": "foo"
 			}', User::class, 'json');
-			$this->fail();
+			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertSame('multi_enum_as_single_enums_array', $e->getFieldPath());
+			Assert::assertSame('multi_enum_as_single_enums_array', $e->getFieldPath());
 			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\JmsSerializer\Enum\NotIterableValueException::class, $previous);
-			$this->assertSame('foo', $previous->getValue());
+			Assert::assertInstanceOf(\Consistence\JmsSerializer\Enum\NotIterableValueException::class, $previous);
+			Assert::assertSame('foo', $previous->getValue());
 		}
 	}
 
@@ -502,42 +595,32 @@ class EnumSerializerHandlerTest extends \PHPUnit\Framework\TestCase
 		$serializer = $this->getSerializer();
 
 		try {
-			$serializer->deserialize(sprintf(
+			$serializer->deserialize(
 				'<?xml version="1.0" encoding="UTF-8"?>'
 				. '<result>'
 				. '<single_enum><![CDATA[admin]]></single_enum>'
 				. '</result>',
-				RoleEnum::ADMIN
-			), User::class, 'xml');
-			$this->fail();
+				User::class,
+				'xml'
+			);
+			Assert::fail('Exception expected');
 		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertEquals('single_enum', $e->getFieldPath());
+			Assert::assertSame('single_enum', $e->getFieldPath());
 			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			$this->assertInstanceOf(SimpleXMLElement::class, $previous->getValue());
-		}
-	}
-
-	public function testDeserializeEnumWithWrongDeserializationType(): void
-	{
-		$serializer = $this->getSerializer();
-
-		try {
-			$serializer->deserialize('{
-				"type_enum_with_type": 1
-			}', User::class, 'json');
-			$this->fail();
-		} catch (\Consistence\JmsSerializer\Enum\DeserializationInvalidValueException $e) {
-			$this->assertEquals('type_enum_with_type', $e->getFieldPath());
-			$previous = $e->getPrevious();
-			$this->assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
-			$this->assertSame('1', $previous->getValue());
+			Assert::assertInstanceOf(\Consistence\Enum\InvalidEnumValueException::class, $previous);
+			Assert::assertInstanceOf(SimpleXMLElement::class, $previous->getValue());
 		}
 	}
 
 	private function getSerializer(): SerializerInterface
 	{
+		$xmlSerializationVisitorFactory = new XmlSerializationVisitorFactory();
+		$xmlSerializationVisitorFactory->setFormatOutput(false);
+
 		return SerializerBuilder::create()
+			->addDefaultDeserializationVisitors()
+			->addDefaultSerializationVisitors()
+			->setSerializationVisitor('xml', $xmlSerializationVisitorFactory)
 			->configureHandlers(function (HandlerRegistry $registry): void {
 				$registry->registerSubscribingHandler(new EnumSerializerHandler());
 			})
